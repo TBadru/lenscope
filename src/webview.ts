@@ -1,6 +1,3 @@
-// helper that loads HTML + resource URIs
-
-
 import * as vscode from 'vscode';
 import * as path from 'path';
 
@@ -9,6 +6,7 @@ export function getWebviewContent(
     webview: vscode.Webview
 ): string {
 
+    // Adjust media path to point outside the 'src' folder
     const mediaPath = vscode.Uri.file(path.join(context.extensionPath, 'media'));
 
     const indexHtml = webview.asWebviewUri(
@@ -42,19 +40,32 @@ export function getWebviewContent(
     `;
 }
 
-// HTML inline loader
+// HTML inline loader for Telescope-style UI
 function getHtmlTemplate(scriptUri: vscode.Uri) {
     return `
-    <div id="container">
-        <div id="search-pane">
-            <input id="search-box" type="text" placeholder="Search..." autofocus />
+  <div id="lenscope-container">
+
+        <!-- SEARCH BAR -->
+        <div id="search-bar">
+            <input id="search-input" type="text" placeholder=">live grep" autofocus />
         </div>
 
-        <div id="results-pane"></div>
+        <!-- MAIN 2-PANE LAYOUT -->
+        <div id="main">
 
-        <div id="preview-pane">
-            <pre id="preview-text">(select a file to preview)</pre>
+            <!-- RESULTS LIST -->
+            <div id="results">
+                <div class="placeholder">results</div>
+            </div>
+
+            <!-- PREVIEW -->
+            <div id="preview">
+                <div class="placeholder">grep preview</div>
+                <pre><code id="preview-code"></code></pre>
+            </div>
+
         </div>
+
     </div>
 
     <script src="${scriptUri}"></script>
