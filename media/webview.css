@@ -20,7 +20,7 @@ body {
     color: var(--text);
 
     /* blurred see-through look */
-    backdrop-filter: blur(6px);
+    /* backdrop-filter: blur(6px); */
 }
 
 /* Preview Header with Telescope-style centered line */

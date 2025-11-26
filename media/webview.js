@@ -6,30 +6,27 @@ const previewText = document.getElementById("preview-code");
 
 let results = [];
 let selectedIndex = -1;
-let fuse = null;
 
-// Send search query to extension
-// searchBox.addEventListener("input", () => {
-//     const query = searchBox.value.trim();
-//     vscode.postMessage({ type: "search", query });
-// });
+// -------------------- Search Input --------------------
 searchBox.addEventListener("input", () => {
     const query = searchBox.value.trim();
-    vscode.postMessage({ type: "search", query });
 
     if (!query) {
+        // Clear results & show placeholder
         results = [];
         selectedIndex = -1;
         resultsPane.innerHTML = "<div class='placeholder'>Type to search...</div>";
         previewText.textContent = "(preview empty)";
+        return; // Skip sending search to extension
     }
-});
 
+    vscode.postMessage({ type: "search", query });
+});
 
 // Keep search box focused
 searchBox.focus();
 
-// Keyboard navigation
+// -------------------- Keyboard Navigation --------------------
 document.addEventListener("keydown", (e) => {
     if (!results.length) return;
 
@@ -42,7 +39,7 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-// Mouse click selection
+// -------------------- Mouse Click Selection --------------------
 resultsPane.addEventListener("click", (e) => {
     const target = e.target.closest(".result-item");
     if (!target) return;
@@ -55,16 +52,25 @@ resultsPane.addEventListener("click", (e) => {
     requestPreview();
 });
 
-// Receive messages from extension
+// -------------------- Receive Messages from Extension --------------------
 window.addEventListener("message", (event) => {
     const msg = event.data;
 
     if (msg.type === "results") {
         results = Array.isArray(msg.results) ? msg.results : [];
-        selectedIndex = results.length > 0 ? 0 : -1;
-        renderResults(results, searchBox.value);
-        if (selectedIndex >= 0) requestPreview();
-        else previewText.textContent = "(preview empty)";
+
+        if (!results.length) {
+            // No results: show placeholders
+            selectedIndex = -1;
+            resultsPane.innerHTML = "<div class='no-results'>No results found</div>";
+            previewText.textContent = "(preview empty)";
+        } else {
+            // Auto-select the first item
+            selectedIndex = 0;
+            renderResults(results, searchBox.value);
+            scrollToSelected();   // Scroll first result into view
+            requestPreview();     // Show preview of first item
+        }
     }
 
     if (msg.type === "preview") {
@@ -72,23 +78,24 @@ window.addEventListener("message", (event) => {
     }
 });
 
-// Render results list with fuzzy match highlighting
+// -------------------- Scroll to Selected Result --------------------
+function scrollToSelected() {
+    const items = resultsPane.querySelectorAll(".result-item");
+    if (selectedIndex >= 0 && items[selectedIndex]) {
+        items[selectedIndex].scrollIntoView({ block: "nearest" });
+    }
+}
+
+// -------------------- Render Results with Highlight --------------------
 function renderResults(items, query) {
     resultsPane.innerHTML = "";
-
-    if (!items.length) {
-        resultsPane.innerHTML = "<div class='no-results'>No results found</div>";
-        return;
-    }
-
-    const regex = new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi");
+    const regex = query ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi") : null;
 
     items.forEach((text, index) => {
         const el = document.createElement("div");
         el.className = "result-item";
 
-        // Highlight fuzzy match
-        if (query) {
+        if (regex) {
             el.innerHTML = text.replace(regex, match => `<span class="match">${match}</span>`);
         } else {
             el.textContent = text;
@@ -97,21 +104,19 @@ function renderResults(items, query) {
         if (index === selectedIndex) el.classList.add("selected");
         resultsPane.appendChild(el);
     });
+
+    scrollToSelected(); // Ensure the selected item is in view
 }
 
-// Move selection up/down
+// -------------------- Selection Navigation --------------------
 function moveSelection(delta) {
     if (!results.length) return;
 
-    selectedIndex += delta;
-    if (selectedIndex < 0) selectedIndex = results.length - 1;
-    if (selectedIndex >= results.length) selectedIndex = 0;
-
+    selectedIndex = (selectedIndex + delta + results.length) % results.length;
     updateSelectionUI();
     requestPreview();
 }
 
-// Update UI + scroll selected
 function updateSelectionUI() {
     const items = resultsPane.querySelectorAll(".result-item");
     items.forEach((el, i) => el.classList.toggle("selected", i === selectedIndex));
@@ -120,7 +125,7 @@ function updateSelectionUI() {
     if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
 }
 
-// Request preview for current selection
+// -------------------- Request Preview --------------------
 function requestPreview() {
     if (selectedIndex < 0 || selectedIndex >= results.length) {
         previewText.textContent = "(preview empty)";
@@ -129,7 +134,7 @@ function requestPreview() {
     vscode.postMessage({ type: "preview", file: results[selectedIndex] });
 }
 
-// Open selected file in VS Code
+// -------------------- Open Selected File --------------------
 function openSelectedFile() {
     if (!results.length || selectedIndex < 0) return;
     const file = results[selectedIndex].split(":")[0];
