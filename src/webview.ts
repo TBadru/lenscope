@@ -68,7 +68,7 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
     return `
   <div id="lenscope-container">
 
-        <!-- SEARCH BAR -->
+        <!-- LIVE GREP -->
         <div id="search-bar">
             <div class="pane-header">
                 <span>live grep</span>
@@ -79,7 +79,7 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
         <!-- MAIN 2-PANE LAYOUT -->
         <div id="main">
 
-            <!-- RESULTS LIST -->
+            <!-- RESULTS -->
             <div id="results">
                 <div class="pane-header">
                     <span>results</span>
@@ -87,7 +87,7 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
                 <div class="placeholder">No results yet</div>
             </div>
 
-            <!-- PREVIEW -->
+            <!-- GREP PREVIEW -->
             <div id="preview">
                 <div class="pane-header">
                     <span>grep preview</span>

@@ -54,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         panel.webview.onDidReceiveMessage(async (msg: any) => {
 
-            // ---- SEARCH ----
+            //  SEARCH 
             if (msg.type === "search") {
 
                 if (searchTimeout) clearTimeout(searchTimeout);
