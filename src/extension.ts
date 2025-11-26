@@ -6,7 +6,7 @@ import { getWebviewContent } from './webview';
 
 const execPromise = util.promisify(exec);
 
-//  Cached RG Path 
+// Cached RG Path
 let cachedRgPath: string | null = null;
 
 async function getRgPath(): Promise<string> {
@@ -15,26 +15,23 @@ async function getRgPath(): Promise<string> {
     try {
         const { stdout } = await execPromise('where rg');
         const lines = stdout.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) throw new Error("rg.exe not found");
 
-        if (lines.length === 0) throw new Error('No rg.exe found');
-        cachedRgPath = lines[0]; // pick first available, including scoop\shims
-        console.log('Found rg at:', cachedRgPath);
+        cachedRgPath = lines[0];
         return cachedRgPath;
     } catch {
-        vscode.window.showErrorMessage('ripgrep (rg) not found in PATH. Please install it.');
+        vscode.window.showErrorMessage("ripgrep (rg) not found in PATH.");
         cachedRgPath = '';
         return '';
     }
 }
 
-//  Activate Extension 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Lenscope extension activated.');
 
     let panel: vscode.WebviewPanel | null = null;
 
     const disposable = vscode.commands.registerCommand('lenscope.open', () => {
-        // Reuse existing panel if it exists
+
         if (panel) {
             panel.reveal(vscode.ViewColumn.Active);
             return;
@@ -49,49 +46,58 @@ export function activate(context: vscode.ExtensionContext) {
 
         panel.webview.html = getWebviewContent(context, panel.webview);
 
+        panel.onDidDispose(() => { panel = null; });
+
         let FuseModule: any;
         let searchTimeout: NodeJS.Timeout | null = null;
         const DEBOUNCE_MS = 250;
 
-        panel.onDidDispose(() => {
-            panel = null; // reset panel when disposed
-        });
+        panel.webview.onDidReceiveMessage(async (msg: any) => {
 
-        panel.webview.onDidReceiveMessage(async (msg) => {
+            // ---- SEARCH ----
             if (msg.type === "search") {
+
                 if (searchTimeout) clearTimeout(searchTimeout);
 
                 searchTimeout = setTimeout(async () => {
-                    const query = msg.query || "";
-                    console.log("Search query received:", query);
-
+                    const query: string = msg.query || "";
                     const rawResults = await ripgrepSearch(query);
-                    console.log("Ripgrep results:", rawResults);
 
-                    if (!FuseModule) FuseModule = (await import('fuse.js')).default;
+                    if (!FuseModule) FuseModule = (await import("fuse.js")).default;
+                    const fuse = new FuseModule(rawResults, {
+                        includeScore: true,
+                        threshold: 0.5,
+                        isCaseSensitive: false
+                    });
 
-                    const fuse = new FuseModule(rawResults, { includeScore: true, threshold: 0.5 });
-                    const fuzzyResults = query ? fuse.search(query).map((r: { item: string }) => r.item) : rawResults;
-                    console.log("Fuzzy search results:", fuzzyResults);
+                    const fuzzyResults =
+                        query ? fuse.search(query).map((r: any) => r.item) : rawResults;
 
                     panel?.webview.postMessage({ type: "results", results: fuzzyResults });
 
                     if (fuzzyResults.length > 0) {
-                        const firstFile = fuzzyResults[0].split(":")[0];
-                        const preview = await readFilePreview(firstFile);
+                        const [filePath, lineNumStr] = fuzzyResults[0].split(":");
+                        const lineNum = parseInt(lineNumStr, 10) || 1;
+                        const preview = await readFilePreview(filePath, lineNum);
                         panel?.webview.postMessage({ type: "preview", preview });
                     } else {
                         panel?.webview.postMessage({ type: "preview", preview: "(preview empty)" });
                     }
+
                 }, DEBOUNCE_MS);
             }
 
+            // ---- PREVIEW ----
             if (msg.type === "preview") {
-                const filePath = msg.file.split(":")[0];
-                const preview = await readFilePreview(filePath);
+                const parts = msg.file.split(":");
+                const filePath: string = parts[0];
+                const lineNum: number = parseInt(parts[1], 10) || 1;
+
+                const preview = await readFilePreview(filePath, lineNum);
                 panel?.webview.postMessage({ type: "preview", preview });
             }
 
+            // ---- OPEN FILE ----
             if (msg.type === "openFile") {
                 try {
                     const doc = await vscode.workspace.openTextDocument(msg.file);
@@ -101,18 +107,18 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             }
 
-            if (msg.type === "close") {
-                panel?.dispose();
-            }
         });
     });
 
     context.subscriptions.push(disposable);
 }
 
-export function deactivate() {}
+export function deactivate() { }
 
-//  Windows-safe Ripgrep Search 
+
+
+//  RIPGREP SEARCH
+
 async function ripgrepSearch(query: string): Promise<string[]> {
     if (!query.trim()) return [];
 
@@ -124,38 +130,57 @@ async function ripgrepSearch(query: string): Promise<string[]> {
     if (!rgPath) return [];
 
     const safeQuery = query.replace(/"/g, '\\"');
-    const cmd = `"${rgPath}" --vimgrep --fixed-strings "${safeQuery}" .`;
 
-    console.log("Executing:", cmd, "in", workspacePath);
+    const cmd = `"${rgPath}" -i --vimgrep --fixed-strings "${safeQuery}" .`;
 
     try {
-        const { stdout, stderr } = await execPromise(cmd, { cwd: workspacePath, maxBuffer: 1024 * 5000 });
-        if (stderr) console.error("RG stderr:", stderr);
+        const { stdout } = await execPromise(cmd, {
+            cwd: workspacePath,
+            maxBuffer: 1024 * 5000
+        });
 
-        const lines = stdout
+        return stdout
             .split("\n")
-            .filter(l => l.trim() !== "")
-            .map(l => {
-                const parts = l.split(":");
+            .filter(Boolean)
+            .map(line => {
+                const parts = line.split(":");
                 const file = parts[0];
                 const lineNum = parts[1];
                 const content = parts.slice(3).join(":");
-                return `${file}:${lineNum}: ${content}`;
-            });
+                return `${file}:${lineNum}:${content}`;
+            })
+            .slice(0, 50);
 
-        return lines.slice(0, 50);
-    } catch (err) {
-        console.error("Ripgrep error:", err);
+    } catch {
         return [];
     }
 }
 
-//  File Preview 
-async function readFilePreview(file: string): Promise<string> {
+
+
+//  FILE PREVIEW
+
+async function readFilePreview(file: string, lineNum: number): Promise<string> {
     try {
-        const text = fs.readFileSync(file, 'utf8');
-        return text.split('\n').slice(0, 200).join('\n');
-    } catch {
-        return 'Unable to load preview.';
+        const text = fs.readFileSync(file, "utf8");
+        const lines = text.split("\n");
+
+        const start = Math.max(0, lineNum - 10);
+        const end = Math.min(lines.length, lineNum + 10);
+
+        const snippet = lines
+            .slice(start, end)
+            .map((line, i) => {
+                const currentLine = start + i + 1;
+                return currentLine === lineNum
+                    ? `> ${currentLine}: ${line}`
+                    : `  ${currentLine}: ${line}`;
+            })
+            .join("\n");
+
+        return snippet;
+
+    } catch (err) {
+        return "Unable to load preview.";
     }
 }
