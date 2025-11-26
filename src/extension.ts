@@ -26,62 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
         let searchTimeout: NodeJS.Timeout | null = null;
         const DEBOUNCE_MS = 250;
 
-        // panel.webview.onDidReceiveMessage(async (msg) => {
-        //     if (msg.type === "search") {
-        //         if (searchTimeout) clearTimeout(searchTimeout);
-
-        //         searchTimeout = setTimeout(async () => {
-        //             const query = msg.query || "";
-
-        //             // 1. Get raw ripgrep results for the query (even partial)
-        //             const rawResults = await ripgrepSearch(query);
-
-        //             // 2. Lazy load Fuse.js (only once)
-        //             if (!FuseModule) {
-        //                 FuseModule = (await import('fuse.js')).default;
-        //             }
-
-        //             // 3. Create Fuse instance for fuzzy matching
-        //             const fuse = new FuseModule(rawResults, {
-        //                 includeScore: true,
-        //                 threshold: 0.5, // fuzzy threshold
-        //             });
-
-        //             // 4. Perform fuzzy search if query is not empty
-        //             const fuzzyResults = query ? fuse.search(query).map((r: { item: string }) => r.item) : rawResults;
-
-        //             // 5. Send results to webview
-        //             panel.webview.postMessage({ type: "results", results: fuzzyResults });
-
-        //             // 6. Auto-preview the first result if available
-        //             if (fuzzyResults.length > 0) {
-        //                 const firstFile = fuzzyResults[0].split(":")[0];
-        //                 const preview = await readFilePreview(firstFile);
-        //                 panel.webview.postMessage({ type: "preview", preview });
-        //             } else {
-        //                 panel.webview.postMessage({ type: "preview", preview: "(preview empty)" });
-        //             }
-        //         }, DEBOUNCE_MS);
-        //     }
-
-        //     if (msg.type === "preview") {
-        //         const filePath = msg.file.split(":")[0];
-        //         const preview = await readFilePreview(filePath);
-        //         panel.webview.postMessage({ type: "preview", preview });
-        //     }
-
-        //     if (msg.type === "openFile") {
-        //         const doc = await vscode.workspace.openTextDocument(msg.file);
-        //         vscode.window.showTextDocument(doc);
-        //     }
-
-        //     if (msg.type === "close") {
-        //         console.log("Closing webview...");
-        //         panel.dispose();
-        //     }
-        // });
-
-
         panel.webview.onDidReceiveMessage(async (msg) => {
     if (msg.type === "search") {
         if (searchTimeout) clearTimeout(searchTimeout);
@@ -147,36 +91,6 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 // Ripgrep search function
-
-// async function ripgrepSearch(query: string): Promise<string[]> {
-//     if (!query.trim()) return [];
-
-//     const workspaceFolders = vscode.workspace.workspaceFolders;
-//     if (!workspaceFolders) return [];
-
-//     const workspacePath = workspaceFolders[0].uri.fsPath;
-
-//     return new Promise((resolve) => {
-//         const cmd = `rg --vimgrep "${query}"`;
-
-//         exec(cmd, { cwd: workspacePath, maxBuffer: 1024 * 5000 }, (err, stdout) => {
-//             if (err) return resolve([]);
-
-//             const lines = stdout
-//                 .split("\n")
-//                 .filter(l => l.trim() !== "")
-//                 .map(l => {
-//                     const parts = l.split(":");
-//                     const file = parts[0];
-//                     const lineNum = parts[1];
-//                     const content = parts.slice(3).join(":");
-//                     return `${file}:${lineNum}: ${content}`;
-//                 });
-
-//             resolve(lines.slice(0, 50)); // limit results to 50
-//         });
-//     });
-// }
 async function ripgrepSearch(query: string): Promise<string[]> {
     if (!query.trim()) return [];
 

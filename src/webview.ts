@@ -6,13 +6,6 @@ export function getWebviewContent(
     webview: vscode.Webview
 ): string {
 
-    // Adjust media path to point outside the 'src' folder
-    const mediaPath = vscode.Uri.file(path.join(context.extensionPath, 'media'));
-
-    const indexHtml = webview.asWebviewUri(
-        vscode.Uri.file(path.join(context.extensionPath, 'media', 'index.html'))
-    );
-
     const scriptUri = webview.asWebviewUri(
         vscode.Uri.file(path.join(context.extensionPath, 'media', 'webview.js'))
     );
@@ -35,19 +28,52 @@ export function getWebviewContent(
         </head>
         <body>
             ${getHtmlTemplate(scriptUri)}
+
+            <!-- Inline JS for keyboard selection in results -->
+            <script>
+                const resultsContainer = document.getElementById("results");
+                let selectedIndex = 0;
+
+                function updateSelection() {
+                    const items = resultsContainer.querySelectorAll(".result-item");
+                    items.forEach((item, i) => {
+                        item.classList.toggle("selected", i === selectedIndex);
+                    });
+                }
+
+                document.addEventListener("keydown", (e) => {
+                    const items = resultsContainer.querySelectorAll(".result-item");
+                    if (!items.length) return;
+
+                    if (e.key === "ArrowDown") {
+                        selectedIndex = (selectedIndex + 1) % items.length;
+                        updateSelection();
+                        e.preventDefault();
+                    } else if (e.key === "ArrowUp") {
+                        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                        updateSelection();
+                        e.preventDefault();
+                    }
+                });
+
+                updateSelection();
+            </script>
         </body>
         </html>
     `;
 }
 
-// HTML inline loader for Telescope-style UI
+// HTML template with Telescope-style headers
 function getHtmlTemplate(scriptUri: vscode.Uri) {
     return `
   <div id="lenscope-container">
 
         <!-- SEARCH BAR -->
         <div id="search-bar">
-            <input id="search-input" type="text" placeholder=">live grep" autofocus />
+            <div class="pane-header">
+                <span>live grep</span>
+            </div>
+            <input id="search-input" type="text" placeholder=">" autofocus />
         </div>
 
         <!-- MAIN 2-PANE LAYOUT -->
@@ -55,12 +81,17 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
 
             <!-- RESULTS LIST -->
             <div id="results">
-                <div class="placeholder">results</div>
+                <div class="pane-header">
+                    <span>results</span>
+                </div>
+                <div class="placeholder">No results yet</div>
             </div>
 
             <!-- PREVIEW -->
             <div id="preview">
-                <div class="placeholder">grep preview</div>
+                <div class="pane-header">
+                    <span>grep preview</span>
+                </div>
                 <pre><code id="preview-code"></code></pre>
             </div>
 

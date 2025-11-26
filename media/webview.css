@@ -23,6 +23,124 @@ body {
     backdrop-filter: blur(6px);
 }
 
+/* Preview Header with Telescope-style centered line */
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.preview-header::before,
+.preview-header::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+    margin: 0 0.5rem;
+}
+
+/* Pane Headers: Live Grep, Results, Preview */
+.pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+}
+
+.pane-header::before,
+.pane-header::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+    margin: 0 0.5rem;
+}
+
+/* Optional: slightly different color for the search bar header */
+#search-bar .pane-header {
+    color: var(--text);
+    border-bottom: 1px solid var(--accent);
+    margin-bottom: 4px;
+}
+
+/* ----------------- Scrollbars ----------------- */
+#results::-webkit-scrollbar,
+#preview::-webkit-scrollbar {
+    width: 8px;
+}
+
+#results::-webkit-scrollbar-thumb,
+#preview::-webkit-scrollbar-thumb {
+    background-color: rgba(137, 180, 250, 0.3);
+    border-radius: 4px;
+}
+
+#results::-webkit-scrollbar-thumb:hover,
+#preview::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(137, 180, 250, 0.5);
+}
+
+#results::-webkit-scrollbar-track,
+#preview::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ----------------- Results List ----------------- */
+.result-item {
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+
+    transition: background 150ms ease;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.result-item:hover {
+    background: var(--hover-bg);
+    color: var(--text);
+}
+
+.result-item.selected {
+    background: var(--select-bg);
+    color: var(--text);
+    border-left: 2px solid var(--accent);
+}
+
+/* File icons */
+.result-item .file-icon {
+    margin-right: 6px;
+    opacity: 0.9;
+}
+
+/* ----------------- Preview Pane ----------------- */
+#preview pre {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text);
+    white-space: pre-wrap; /* wrap long lines */
+}
+
+/* Fuzzy Match Highlight */
+.match {
+    background: rgba(249, 226, 175, 0.25);
+    color: #aff9b0;
+    font-weight: bold;
+}
+
+/* ----------------- Optional: Hover Effects ----------------- */
+#results .result-item:hover,
+#preview pre:hover {
+    outline: none;
+    transition: background 150ms ease;
+}
+
+
 
 /* Floating Window Container */
 #lenscope-container {
