@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getWebviewContent } from './webview'; // <-- Ensure this is in place
+import { getWebviewContent } from './webview';
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -91,21 +91,57 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 // Ripgrep search function
-async function ripgrepSearch(query: string): Promise<string[]> {
-    if (!query.trim()) return [];
+// async function ripgrepSearch(query: string): Promise<string[]> {
+//     if (!query.trim()) return [];
 
+//     const workspaceFolders = vscode.workspace.workspaceFolders;
+//     if (!workspaceFolders) return [];
+
+//     const workspacePath = workspaceFolders[0].uri.fsPath;
+
+//     return new Promise((resolve) => {
+//         const cmd = `rg --vimgrep "${query}"`; // Make sure the query is passed correctly to ripgrep
+
+//         exec(cmd, { cwd: workspacePath, maxBuffer: 1024 * 5000 }, (err, stdout) => {
+//             if (err) {
+//                 console.error("Ripgrep error: ", err);
+//                 return resolve([]);  // Return empty if error
+//             }
+
+//             const lines = stdout
+//                 .split("\n")
+//                 .filter(l => l.trim() !== "")
+//                 .map(l => {
+//                     const parts = l.split(":");
+//                     const file = parts[0];
+//                     const lineNum = parts[1];
+//                     const content = parts.slice(3).join(":");
+//                     return `${file}:${lineNum}: ${content}`;
+//                 });
+
+//             console.log("Ripgrep search results:", lines);  // Add this log for debugging
+//             resolve(lines.slice(0, 50));  // Limit results for now to 50
+//         });
+//     });
+// }
+
+async function ripgrepSearch(query: string): Promise<string[]> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) return [];
+
+    if (!query.trim()) return []; // keep this, handle placeholder in webview
 
     const workspacePath = workspaceFolders[0].uri.fsPath;
 
     return new Promise((resolve) => {
-        const cmd = `rg --vimgrep "${query}"`; // Make sure the query is passed correctly to ripgrep
+        // Escape single quotes in query
+        const safeQuery = query.replace(/'/g, "'\\''");
+        const cmd = `rg --vimgrep '${safeQuery}'`;
 
         exec(cmd, { cwd: workspacePath, maxBuffer: 1024 * 5000 }, (err, stdout) => {
             if (err) {
                 console.error("Ripgrep error: ", err);
-                return resolve([]);  // Return empty if error
+                return resolve([]);
             }
 
             const lines = stdout
@@ -119,8 +155,7 @@ async function ripgrepSearch(query: string): Promise<string[]> {
                     return `${file}:${lineNum}: ${content}`;
                 });
 
-            console.log("Ripgrep search results:", lines);  // Add this log for debugging
-            resolve(lines.slice(0, 50));  // Limit results for now to 50
+            resolve(lines.slice(0, 50));
         });
     });
 }
