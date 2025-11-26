@@ -9,10 +9,22 @@ let selectedIndex = -1;
 let fuse = null;
 
 // Send search query to extension
+// searchBox.addEventListener("input", () => {
+//     const query = searchBox.value.trim();
+//     vscode.postMessage({ type: "search", query });
+// });
 searchBox.addEventListener("input", () => {
     const query = searchBox.value.trim();
     vscode.postMessage({ type: "search", query });
+
+    if (!query) {
+        results = [];
+        selectedIndex = -1;
+        resultsPane.innerHTML = "<div class='placeholder'>Type to search...</div>";
+        previewText.textContent = "(preview empty)";
+    }
 });
+
 
 // Keep search box focused
 searchBox.focus();
