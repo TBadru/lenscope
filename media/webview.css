@@ -68,7 +68,7 @@ body {
     margin-bottom: 4px;
 }
 
-/* ----------------- Scrollbars ----------------- */
+/* - Scrollbars - */
 #results::-webkit-scrollbar,
 #preview::-webkit-scrollbar {
     width: 8px;
@@ -90,7 +90,7 @@ body {
     background: transparent;
 }
 
-/* ----------------- Results List ----------------- */
+/* - Results List - */
 .result-item {
     padding: 6px 12px;
     font-size: 13px;
@@ -118,7 +118,7 @@ body {
     opacity: 0.9;
 }
 
-/* ----------------- Preview Pane ----------------- */
+/* - Preview Pane - */
 #preview pre {
     margin: 0;
     font-size: 13px;
@@ -133,7 +133,7 @@ body {
     font-weight: bold;
 }
 
-/* ----------------- Optional: Hover Effects ----------------- */
+/* - Optional: Hover Effects - */
 #results .result-item:hover,
 #preview pre:hover {
     outline: none;
