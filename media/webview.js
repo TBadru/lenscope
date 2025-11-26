@@ -7,20 +7,27 @@ const previewText = document.getElementById("preview-code");
 let results = [];
 let selectedIndex = -1;
 
-// -------------------- Search Input --------------------
+let debounceTimeout = null;
+const DEBOUNCE_MS = 200; // wait 200ms after typing stops
+
+// -------------------- Search Input with Debounce --------------------
 searchBox.addEventListener("input", () => {
     const query = searchBox.value.trim();
 
-    if (!query) {
-        // Clear results & show placeholder
-        results = [];
-        selectedIndex = -1;
-        resultsPane.innerHTML = "<div class='placeholder'>Type to search...</div>";
-        previewText.textContent = "(preview empty)";
-        return; // Skip sending search to extension
-    }
+    if (debounceTimeout) clearTimeout(debounceTimeout);
 
-    vscode.postMessage({ type: "search", query });
+    debounceTimeout = setTimeout(() => {
+        if (!query) {
+            // Clear results & show placeholder
+            results = [];
+            selectedIndex = -1;
+            resultsPane.innerHTML = "<div class='placeholder'>No results yet</div>";
+            previewText.textContent = "(preview empty)";
+            return;
+        }
+
+        vscode.postMessage({ type: "search", query });
+    }, DEBOUNCE_MS);
 });
 
 // Keep search box focused
@@ -60,16 +67,13 @@ window.addEventListener("message", (event) => {
         results = Array.isArray(msg.results) ? msg.results : [];
 
         if (!results.length) {
-            // No results: show placeholders
             selectedIndex = -1;
             resultsPane.innerHTML = "<div class='no-results'>No results found</div>";
             previewText.textContent = "(preview empty)";
         } else {
-            // Auto-select the first item
             selectedIndex = 0;
             renderResults(results, searchBox.value);
-            scrollToSelected();   // Scroll first result into view
-            requestPreview();     // Show preview of first item
+            requestPreview();
         }
     }
 
@@ -78,15 +82,7 @@ window.addEventListener("message", (event) => {
     }
 });
 
-// -------------------- Scroll to Selected Result --------------------
-function scrollToSelected() {
-    const items = resultsPane.querySelectorAll(".result-item");
-    if (selectedIndex >= 0 && items[selectedIndex]) {
-        items[selectedIndex].scrollIntoView({ block: "nearest" });
-    }
-}
-
-// -------------------- Render Results with Highlight --------------------
+// -------------------- Render Results --------------------
 function renderResults(items, query) {
     resultsPane.innerHTML = "";
     const regex = query ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi") : null;
@@ -105,10 +101,10 @@ function renderResults(items, query) {
         resultsPane.appendChild(el);
     });
 
-    scrollToSelected(); // Ensure the selected item is in view
+    scrollToSelected();
 }
 
-// -------------------- Selection Navigation --------------------
+// -------------------- Navigation --------------------
 function moveSelection(delta) {
     if (!results.length) return;
 
@@ -125,7 +121,7 @@ function updateSelectionUI() {
     if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
 }
 
-// -------------------- Request Preview --------------------
+// -------------------- Preview --------------------
 function requestPreview() {
     if (selectedIndex < 0 || selectedIndex >= results.length) {
         previewText.textContent = "(preview empty)";
@@ -134,7 +130,7 @@ function requestPreview() {
     vscode.postMessage({ type: "preview", file: results[selectedIndex] });
 }
 
-// -------------------- Open Selected File --------------------
+// -------------------- Open File --------------------
 function openSelectedFile() {
     if (!results.length || selectedIndex < 0) return;
     const file = results[selectedIndex].split(":")[0];
