@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let panel: vscode.WebviewPanel | null = null;
 
-    const disposable = vscode.commands.registerCommand('lenscope.open', () => {
+    const disposable = vscode.commands.registerCommand('lenscope.live_grep', () => {
 
         if (panel) {
             panel.reveal(vscode.ViewColumn.Active);
