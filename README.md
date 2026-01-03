@@ -1,6 +1,6 @@
 # Lenscope
 
-Gaze deeply into unknown regions using the power of the moon.
+Gaze deeply into unknown regions using the power of the moon 🔭.
 
 ## What Is Lenscope?
  
@@ -10,10 +10,44 @@ a fuzzy finder over list ([ripgrep](https://github.com/BurntSushi/ripgrep)) VS c
 
 ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern. By default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.
 
-## Features
+### Installing ripgrep
 
-Built-in features
+The binary name for ripgrep is `rg`.
 
+If you're a **macOS Homebrew** or a **Linuxbrew** user, then you can install
+ripgrep from homebrew-core:
+
+```
+$ brew install ripgrep
+```
+
+If you're a **Windows Chocolatey** user, then you can install ripgrep from the
+[official repo](https://chocolatey.org/packages/ripgrep):
+
+```
+$ choco install ripgrep
+```
+
+If you're a **Windows Scoop** user, then you can install ripgrep from the
+[official bucket](https://github.com/ScoopInstaller/Main/blob/master/bucket/ripgrep.json):
+
+```
+$ scoop install ripgrep
+```
+
+If you're a **Windows Winget** user, then you can install ripgrep from the
+[winget-pkgs](https://github.com/microsoft/winget-pkgs/tree/master/manifests/b/BurntSushi/ripgrep)
+repository:
+
+```
+$ winget install BurntSushi.ripgrep.MSVC
+```
+
+## Features/Functions
+
+Lenscope built-in features/functions
+
+v0.0.1
 | Functions             | Description                                                                                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `find_files`  | Lists files in your current working directory, respects .gitignore ❌
