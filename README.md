@@ -6,7 +6,7 @@ Gaze deeply into unknown regions using the power of the moon.
  
 a fuzzy finder over list ([ripgrep](https://github.com/BurntSushi/ripgrep)) VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
-## What Is ripgrep ?
+## What Is ripgrep?
 
 ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern. By default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.
 
