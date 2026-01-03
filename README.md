@@ -1,6 +1,6 @@
-# lenscope
+# Lenscope
 
-Gaze deeply into unknown regions using the power of the moon 🔭
+Gaze deeply into unknown regions using the power of the moon.
 
 ## What Is Lenscope?
  
@@ -8,7 +8,7 @@ a fuzzy finder over list ([ripgrep](https://github.com/BurntSushi/ripgrep)) VS c
 
 ## What Is ripgrep ?
 
-ripgrep recursively searches directories for a regex pattern while respecting gitignore.
+ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern. By default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.
 
 ## Features
 
@@ -17,12 +17,10 @@ Built-in features
 | Functions             | Description                                                                                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `find_files`  | Lists files in your current working directory, respects .gitignore ❌
-| `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore. (Requires [ripgrep] (https://github.com/BurntSushi/ripgrep))     ✅        |
+| `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore. Requires ripgrep    ✅        |
 | `current_buffer_fuzzy_find` | Live fuzzy search inside of the currently open buffer ❌
 
 
 ## License
 
-MIT
-
-
+MIT License
