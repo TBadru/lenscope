@@ -1,119 +1,257 @@
 const vscode = acquireVsCodeApi();
 
-const searchBox = document.getElementById("search-box");
-const resultsPane = document.getElementById("results-pane");
-const previewText = document.getElementById("preview-text");
+const searchBox = document.getElementById("search-input");
+const resultsPane = document.getElementById("results");
+const previewText = document.getElementById("preview-code");
+
+// const FILE_ICONS = {
+//   js: "",
+//   ts: "",
+//   jsx: "",
+//   tsx: "",
+//   rb: "",
+//   py: "",
+//   go: "",
+//   rs: "",
+//   java: "",
+//   php: "",
+//   html: "",
+//   css: "",
+//   scss: "",
+//   json: "",
+//   yml: "",
+//   yaml: "",
+//   md: "",
+//   sh: "",
+//   dockerfile: "",
+//   sql: "",
+//   default: ""
+// };
+
+const FILE_ICONS = {
+  rb: "ruby-original.svg",
+  erb: "ruby-original.svg",
+  js: "javascript-original.svg",
+  ts: "typescript-original.svg",
+  jsx: "jsx.svg",
+  tsx: "tsx.svg",
+  html: "html5-original.svg",
+  css: "css.svg",
+  json: "json.svg",
+  yml: "yaml-original.svg",
+  yaml: "yaml-original.svg",
+  py: "python-original.svg",
+  go: "go-original-wordmark.svg",
+  rs: "rust-original.svg",
+  java: "java-original.svg",
+  php: "php-original.svg",
+  scss: "sass-original.svg",
+  md: "markdown.svg",
+  sh: "sh.svg",
+  dockerfile: "docker-plain.svg",
+  sql: "sql.svg",
+  lua: "lua-original.svg",
+  ps1: "powershell-original.svg",
+  razor: "blazor-original.svg",
+  zig: "zig-original.svg",
+  nix: "nixos-original.svg",
+  cpp: "cplusplus-original.svg",
+  c: "c.svg",
+  cs: "csharp.svg",
+  default: "default.svg"
+};
+
+function getFileIconPath(file) {
+    const ext = file.split(".").pop().toLowerCase();
+    return `${ICON_BASE}/${FILE_ICONS[ext] || FILE_ICONS.default}`;
+}
+
+
 
 let results = [];
 let selectedIndex = -1;
 
-// Send search query to extension
+let debounceTimeout = null;
+const DEBOUNCE_MS = 200;
+
+// escape HTML 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// search input with debounce
 searchBox.addEventListener("input", () => {
-    vscode.postMessage({
-        type: "search",
-        query: searchBox.value
-    });
+    const query = searchBox.value.trim();
+
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+
+    debounceTimeout = setTimeout(() => {
+        if (!query) {
+            results = [];
+            selectedIndex = -1;
+            resultsPane.innerHTML = "<div class='placeholder'>No results yet</div>";
+            previewText.textContent = "(preview empty)";
+            return;
+        }
+
+        vscode.postMessage({ type: "search", query });
+    }, DEBOUNCE_MS);
 });
 
-// Handle keyboard navigation
-searchBox.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown" || e.key === "j") {
-        moveSelection(1);
-        e.preventDefault();
-    }
-    if (e.key === "ArrowUp" || e.key === "k") {
-        moveSelection(-1);
-        e.preventDefault();
-    }
-    if (e.key === "Enter") {
-        openSelectedFile();
-        e.preventDefault();
-    }
+// keep search box focused
+searchBox.focus();
+
+//  Keyboard Navigation 
+document.addEventListener("keydown", (e) => {
+    if (!results.length) return;
+
+    if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); moveSelection(1); }
+    if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); moveSelection(-1); }
+    if (e.key === "Enter") { e.preventDefault(); openSelectedFile(); }
     if (e.key === "Escape") {
-        vscode.postMessage({ type: "close" });
         e.preventDefault();
+        vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     }
 });
 
-// Receive messages FROM extension
+// mouse click selection
+resultsPane.addEventListener("click", (e) => {
+    const target = e.target.closest(".result-item");
+    if (!target) return;
+
+    const index = Array.from(resultsPane.children).indexOf(target);
+    if (index < 0) return;
+
+    selectedIndex = index;
+    updateSelectionUI();
+    requestPreview();
+});
+
+// receive messages from extension
 window.addEventListener("message", (event) => {
     const msg = event.data;
 
     if (msg.type === "results") {
-        results = msg.results;
-        selectedIndex = -1;
-        renderResults(results);
+        results = Array.isArray(msg.results) ? msg.results : [];
+
+        if (!results.length) {
+            selectedIndex = -1;
+            resultsPane.innerHTML = "<div class='no-results'>No results found</div>";
+            previewText.textContent = "(preview empty)";
+        } else {
+            selectedIndex = 0;
+            renderResults(results, searchBox.value);
+            requestPreview();
+        }
     }
 
     if (msg.type === "preview") {
-        previewText.textContent = msg.preview;
+        previewText.textContent = msg.preview || "(preview empty)";
     }
 });
 
-// Render search results
-function renderResults(items) {
+function renderResults(items, query) {
     resultsPane.innerHTML = "";
 
-    if (items.length === 0) {
-        resultsPane.innerHTML = "<div>No results</div>";
+    const regex = query
+        ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi")
+        : null;
+
+    items.forEach((item, index) => {
+        const el = document.createElement("div");
+        el.className = "result-item";
+
+        const iconPath = getFileIconPath(item.relative);
+        const fileLabel = `${item.relative}:${item.line}`;
+        let matchText = escapeHtml(item.text);
+
+        if (regex) {
+            matchText = matchText.replace(
+                regex,
+                m => `<span class="match">${m}</span>`
+            );
+        }
+
+        el.innerHTML = `
+          <img class="file-icon" src="${iconPath}" />
+          <div class="result-content">
+            <div class="result-file">${escapeHtml(fileLabel)}</div>
+            <div class="result-text">${matchText}</div>
+          </div>
+        `;
+
+        if (index === selectedIndex) el.classList.add("selected");
+        resultsPane.appendChild(el);
+    });
+
+    scrollToSelected();
+}
+
+
+// get file extension
+function getFileExtension(path) {
+    const name = path.split("/").pop().toLowerCase();
+    if (name === "dockerfile") return "dockerfile";
+    const parts = name.split(".");
+    return parts.length > 1 ? parts.pop() : "";
+}
+
+// get icon for file
+function getFileIcon(path) {
+    const ext = getFileExtension(path);
+    return FILE_ICONS[ext] || FILE_ICONS.default;
+}
+
+//  navigation
+function moveSelection(delta) {
+    if (!results.length) return;
+
+    selectedIndex = (selectedIndex + delta + results.length) % results.length;
+    updateSelectionUI();
+    requestPreview();
+}
+
+function updateSelectionUI() {
+    const items = resultsPane.querySelectorAll(".result-item");
+    items.forEach((el, i) => el.classList.toggle("selected", i === selectedIndex));
+
+    const selectedEl = items[selectedIndex];
+    if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
+}
+
+// preview
+function requestPreview() {
+    if (selectedIndex < 0 || selectedIndex >= results.length) {
+        previewText.textContent = "(preview empty)";
         return;
     }
 
-    items.forEach((file, index) => {
-        const el = document.createElement("div");
-        el.textContent = file;
-        el.className = "result-item";
+    const item = results[selectedIndex];
 
-        if (index === selectedIndex) {
-            el.classList.add("selected");
-        }
-
-        el.addEventListener("click", () => {
-            selectedIndex = index;
-            highlightSelection();
-            vscode.postMessage({
-                type: "preview",
-                file
-            });
-        });
-
-        resultsPane.appendChild(el);
+    vscode.postMessage({
+        type: "preview",
+        file: item.file,
+        line: item.line
     });
 }
 
-// Move selection up/down
-function moveSelection(delta) {
-    if (results.length === 0) return;
 
-    selectedIndex += delta;
-    if (selectedIndex < 0) selectedIndex = results.length - 1;
-    if (selectedIndex >= results.length) selectedIndex = 0;
-
-    const file = results[selectedIndex];
-    vscode.postMessage({ type: "preview", file });
-    highlightSelection();
-}
-
-// Highlight selected item
-function highlightSelection() {
-    const items = document.querySelectorAll(".result-item");
-    items.forEach((el, i) => {
-        if (i === selectedIndex) {
-            el.classList.add("selected");
-            el.scrollIntoView({ block: "nearest" });
-        } else {
-            el.classList.remove("selected");
-        }
-    });
-}
-
-// Open the selected file in VS Code
+// open file
 function openSelectedFile() {
-    if (selectedIndex < 0 || selectedIndex >= results.length) return;
+    if (!results.length || selectedIndex < 0) return;
 
-    const file = results[selectedIndex].split(":")[0];
+    const item = results[selectedIndex];
+
     vscode.postMessage({
         type: "openFile",
-        file
+        file: item.file,
+        line: item.line
     });
 }
+

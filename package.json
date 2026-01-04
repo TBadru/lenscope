@@ -1,7 +1,7 @@
 {
-  "name": "toheeb-lenscope",
+  "name": "Lenscope",
   "displayName": "lenscope",
-  "description": "a fuzzy finder over lists (ripgrep) visual studio code extension",
+  "description": "a fuzzy finder over lists (ripgrep) VS code extension",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.106.1"
@@ -10,20 +10,40 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:lenscope.open"
+    "onCommand:lenscope.live_grep",
+    "onCommand:lenscope.find_files",
+    "onCommand:lenscope.current_buffer_fuzzy_find"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "lenscope.open",
-        "title": "Lenscope: Open"
+        "command": "lenscope.live_grep",
+        "title": "Lenscope: live grep"
+      },
+      {
+        "command": "lenscope.find_files",
+        "title": "Lenscope: find files"
+      },
+      {
+        "command": "lenscope.current_buffer_fuzzy_find",
+        "title": "Lenscope: current buffer fuzzy find"
       }
     ],
     "keybindings": [
       {
-        "command": "lenscope.open",
+        "command": "lenscope.live_grep",
         "key": "cmd+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "lenscope.find_files",
+        "key": "cmd+shift+f",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "lenscope.current_buffer_fuzzy_find",
+        "key": "cmd+shift+c",
         "when": "editorTextFocus"
       }
     ]

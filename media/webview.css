@@ -1,6 +1,6 @@
 /* Floating Picker (Sharp / Transparent) */
 :root {
-    --bg-solid: red;
+    --bg-solid: rgb(127, 127, 215);
     --bg-transparent: rgba(30, 30, 46, 0.45);
     --border: green;
     --accent: #89b4fa;
@@ -8,6 +8,8 @@
     --text-dim: #a6adc8;
     --hover-bg: rgba(137, 180, 250, 0.10);
     --select-bg: rgba(137, 180, 250, 0.22);
+    --vscode-editor-background: white;
+    --vscode-editor-foreground: red;
 }
 
 /* Entire background behind the floating picker */
@@ -20,8 +22,135 @@ body {
     color: var(--text);
 
     /* blurred see-through look */
-    backdrop-filter: blur(6px);
+    /* backdrop-filter: blur(6px); */
 }
+
+/* Preview Header with Telescope-style centered line */
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.preview-header::before,
+.preview-header::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+    margin: 0 0.5rem;
+}
+
+/* Preview Content to match editor's theme*/
+.preview {
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  /* font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  line-height: var(--vscode-editor-line-height); */
+
+  padding: 8px 12px;
+  overflow: auto;
+  white-space: pre;
+  border-left: 1px solid var(--vscode-editorWidget-border);
+}
+
+
+/* Pane Headers: Live Grep, Results, Preview */
+.pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+}
+
+.pane-header::before,
+.pane-header::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+    margin: 0 0.5rem;
+}
+
+/* Optional: slightly different color for the search bar header */
+#search-bar .pane-header {
+    color: var(--text);
+    border-bottom: 1px solid var(--accent);
+    margin-bottom: 4px;
+}
+
+/* - Scrollbars - */
+#results::-webkit-scrollbar,
+#preview::-webkit-scrollbar {
+    width: 8px;
+}
+
+#results::-webkit-scrollbar-thumb,
+#preview::-webkit-scrollbar-thumb {
+    background-color: rgba(137, 180, 250, 0.3);
+    border-radius: 4px;
+}
+
+#results::-webkit-scrollbar-thumb:hover,
+#preview::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(137, 180, 250, 0.5);
+}
+
+#results::-webkit-scrollbar-track,
+#preview::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* - Results List - */
+.result-item {
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+
+    transition: background 150ms ease;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.result-item:hover {
+    background: var(--hover-bg);
+    color: var(--text);
+}
+
+.result-item.selected {
+    background: var(--select-bg);
+    color: var(--text);
+    border-left: 2px solid var(--accent);
+}
+
+/* - Preview Pane - */
+#preview pre {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text);
+    white-space: pre-wrap; /* wrap long lines */
+}
+
+/* Fuzzy Match Highlight */
+.match {
+    background: rgba(249, 226, 175, 0.25);
+    color: #aff9b0;
+    font-weight: bold;
+}
+
+/* - Optional: Hover Effects - */
+#results .result-item:hover,
+#preview pre:hover {
+    outline: none;
+    transition: background 150ms ease;
+}
+
 
 
 /* Floating Window Container */
@@ -109,13 +238,6 @@ body {
     border-left: 2px solid var(--accent);
 }
 
-/* File icons */
-.result-item .file-icon {
-    margin-right: 6px;
-    opacity: 0.9;
-}
-
-
 /* Preview Pane */
 #preview {
     flex: 1;
@@ -134,4 +256,43 @@ body {
 .match {
     background: rgba(249, 226, 175, 0.25);
     color: #aff9b0;
+}
+
+.result-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.file-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+
+.result-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.result-file {
+  font-size: 11px;
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-text {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-item.selected {
+  background: rgba(100, 150, 255, 0.15);
 }

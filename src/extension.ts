@@ -1,126 +1,224 @@
 import * as vscode from 'vscode';
-import { getWebviewContent } from './webview';
 import { exec } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
+import * as util from 'util';
+import { getWebviewContent } from './webview';
+import * as os from "os";
+import * as path from "path";
+
+
+
+const execPromise = util.promisify(exec);
+
+interface GrepResult {
+    file: string;
+    line: number;
+    text: string;
+}
+
+// cached RG path
+let cachedRgPath: string | null = null;
+
+async function getRgPath(): Promise<string> {
+    if (cachedRgPath !== null) return cachedRgPath;
+
+    try {
+        const isWindows = os.platform() === "win32";
+        const cmd = isWindows ? "where rg" : "which rg";
+
+        const { stdout } = await execPromise(cmd, {
+            shell: isWindows ? undefined : "/bin/zsh"
+        });
+
+        const rgPath = stdout.split("\n")[0].trim();
+        if (!rgPath) throw new Error("rg not found");
+
+        cachedRgPath = rgPath;
+        console.log("Found rg at:", rgPath);
+        return rgPath;
+
+    } catch (err) {
+        vscode.window.showErrorMessage("ripgrep (rg) not found in PATH.");
+        cachedRgPath = "";
+        return "";
+    }
+}
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Lenscope extension activated.');
 
-    const disposable = vscode.commands.registerCommand('lenscope.open', () => {
+    let panel: vscode.WebviewPanel | null = null;
 
-        const panel = vscode.window.createWebviewPanel(
+    const disposable = vscode.commands.registerCommand('lenscope.live_grep', () => {
+
+        if (panel) {
+            panel.reveal(vscode.ViewColumn.Active);
+            return;
+        }
+
+        panel = vscode.window.createWebviewPanel(
             'lenscope',
             'Lenscope',
             vscode.ViewColumn.Active,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-            }
+            { enableScripts: true, retainContextWhenHidden: true }
         );
 
         panel.webview.html = getWebviewContent(context, panel.webview);
-
-
-        // Fuse.js module (dynamic import once per panel)
+        panel.onDidDispose(() => { panel = null; });
 
         let FuseModule: any;
-
-
-        // Debounce setup
-
         let searchTimeout: NodeJS.Timeout | null = null;
         const DEBOUNCE_MS = 250;
 
-        panel.webview.onDidReceiveMessage(async (msg) => {
+        panel.webview.onDidReceiveMessage(async (msg: any) => {
+
+            // search
+
             if (msg.type === "search") {
-                // Debounce typing
+
                 if (searchTimeout) clearTimeout(searchTimeout);
 
                 searchTimeout = setTimeout(async () => {
-                    const rawResults = await ripgrepSearch(msg.query);
+                    const query: string = msg.query || "";
+                    const rawResults = await ripgrepSearch(query);
 
-                    // Dynamically import Fuse.js if not already imported
+                    // if (!FuseModule) FuseModule = (await import("fuse.js")).default;
                     if (!FuseModule) {
-                        FuseModule = (await import('fuse.js')).default;
+                        FuseModule = (await import("fuse.js")).default;
                     }
 
                     const fuse = new FuseModule(rawResults, {
+                        keys: ["file", "text"],
                         includeScore: true,
-                        threshold: 0.4, // lower = stricter match
+                        threshold: 0.5,
+                        isCaseSensitive: false
                     });
 
-                    const fuzzyResults = msg.query
-                        ? fuse.search(msg.query).map((r: { item: string; score: number }) => r.item)
-                        : rawResults;
+                    const results: GrepResult[] = 
+                    query? fuse .search(query).map((r: any) => r.item): rawResults;
 
-                    panel.webview.postMessage({ type: "results", results: fuzzyResults });
+                    panel?.webview.postMessage({
+                      type: "results",
+                      results,
+                    });
+
+                    if (results.length > 0) {
+                      const preview = await readFilePreview(
+                        results[0].file,
+                        results[0].line
+                      );
+                      panel?.webview.postMessage({ type: "preview", preview });
+                    } else {
+                      panel?.webview.postMessage({
+                        type: "preview",
+                        preview: "(preview empty)",
+                      });
+                    }
+
                 }, DEBOUNCE_MS);
             }
 
+            // preview
             if (msg.type === "preview") {
-                const filePath = msg.file.split(":")[0];
-                const preview = await readFilePreview(filePath);
-                panel.webview.postMessage({ type: "preview", preview });
+
+                const preview = await readFilePreview(msg.file, msg.line);
+                panel?.webview.postMessage({ type: "preview", preview });
             }
 
+            //open file
             if (msg.type === "openFile") {
-                const doc = await vscode.workspace.openTextDocument(msg.file);
-                vscode.window.showTextDocument(doc);
+                try {
+                    const doc = await vscode.workspace.openTextDocument(msg.file);
+                    await vscode.window.showTextDocument(doc, {
+                        selection: new vscode.Range(
+                            msg.line - 1,
+                            0,
+                            msg.line - 1,
+                            0
+                        )
+                    });
+                } catch {
+                    vscode.window.showErrorMessage(`Failed to open file: ${msg.file}`);
+                }
             }
-
-            if (msg.type === "close") {
-                panel.dispose();
-            }
+            
         });
     });
 
     context.subscriptions.push(disposable);
 }
 
-export function deactivate() {}
+export function deactivate() { }
 
 
-// Ripgrep search function
-
-async function ripgrepSearch(query: string): Promise<string[]> {
+// ripgrep search
+async function ripgrepSearch(query: string): Promise<GrepResult[]> {
     if (!query.trim()) return [];
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) return [];
-
     const workspacePath = workspaceFolders[0].uri.fsPath;
 
-    return new Promise((resolve) => {
-        const cmd = `rg --vimgrep "${query}"`;
+    const rgPath = await getRgPath();
+    if (!rgPath) return [];
 
-        exec(cmd, { cwd: workspacePath, maxBuffer: 1024 * 5000 }, (err, stdout) => {
-            if (err) return resolve([]);
+    const safeQuery = query.replace(/"/g, '\\"');
+    const cmd = `"${rgPath}" -i --vimgrep --fixed-strings "${safeQuery}" .`;
 
-            const lines = stdout
-                .split("\n")
-                .filter(l => l.trim() !== "")
-                .map(l => {
-                    const parts = l.split(":");
-                    const file = parts[0];
-                    const lineNum = parts[1];
-                    const content = parts.slice(3).join(":");
-                    return `${file}:${lineNum}: ${content}`;
-                });
-
-            resolve(lines.slice(0, 50));
+    try {
+        const { stdout } = await execPromise(cmd, {
+            cwd: workspacePath,
+            maxBuffer: 1024 * 1024 * 10
         });
-    });
+
+        return stdout
+            .split("\n")
+            .filter(Boolean)
+            .map(line => {
+                const match = line.match(/^(.+?):(\d+):(\d+):(.*)$/);
+                if (!match) return null;
+
+                let [, file, lineNum, , text] = match;
+
+                if (!path.isAbsolute(file)) {
+                    file = path.join(workspacePath, file.replace(/^\.\//, ""));
+                }
+
+                return {
+                    file,
+                    relative: path.relative(workspacePath, file),
+                    line: Number(lineNum),
+                    text
+                } as GrepResult;
+            })
+            .filter((v): v is GrepResult => Boolean(v))
+            .slice(0, 50);
+
+    } catch {
+        return [];
+    }
 }
 
 
-// Read file preview
-
-async function readFilePreview(file: string): Promise<string> {
+// file preview
+async function readFilePreview(file: string, lineNum: number): Promise<string> {
     try {
-        const text = fs.readFileSync(file, 'utf8');
-        return text.split('\n').slice(0, 200).join('\n');
-    } catch (err) {
-        return 'Unable to load preview.';
+        const text = fs.readFileSync(file, "utf8");
+        const lines = text.split("\n");
+
+        const start = Math.max(0, lineNum - 10);
+        const end = Math.min(lines.length, lineNum + 10);
+
+        return lines
+            .slice(start, end)
+            .map((line, i) => {
+                const current = start + i + 1;
+                return current === lineNum
+                    ? `> ${current}: ${line}`
+                    : `  ${current}: ${line}`;
+            })
+            .join("\n");
+
+    } catch {
+        return "Unable to load preview.";
     }
 }
