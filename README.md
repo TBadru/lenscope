@@ -7,6 +7,7 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 ## What Is Lenscope?
  
 `lenscope` is a fuzzy finder over list/files VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) & powered by [ripgrep](https://github.com/BurntSushi/ripgrep) . 
+a fuzzy finder over list ([ripgrep](https://github.com/BurntSushi/ripgrep)) VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ## What Is ripgrep?
 
@@ -49,6 +50,25 @@ If you're a **Windows Scoop** user, then you can install ripgrep from the
 $ scoop install ripgrep
 ```
 
+
+```
+$ brew install ripgrep
+```
+
+If you're a **Windows Chocolatey** user, then you can install ripgrep from the
+[official repo](https://chocolatey.org/packages/ripgrep):
+
+```
+$ choco install ripgrep
+```
+
+If you're a **Windows Scoop** user, then you can install ripgrep from the
+[official bucket](https://github.com/ScoopInstaller/Main/blob/master/bucket/ripgrep.json):
+
+```
+$ scoop install ripgrep
+```
+
 If you're a **Windows Winget** user, then you can install ripgrep from the
 [winget-pkgs](https://github.com/microsoft/winget-pkgs/tree/master/manifests/b/BurntSushi/ripgrep)
 repository:
@@ -66,6 +86,8 @@ v0.0.1
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore. Requires ripgrep    ✅        |
 | `find_files`  | Lists files in your current working directory, respects .gitignore ❌
+| `find_files`  | Lists files in your current working directory, respects .gitignore ❌
+| `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore. Requires ripgrep    ✅        |
 | `current_buffer_fuzzy_find` | Live fuzzy search inside of the currently open buffer ❌
 
 
