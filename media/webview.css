@@ -249,11 +249,12 @@ body {
 }
 
 .file-icon {
-  width: 20px;
-  text-align: center;
-  opacity: 0.9;
-  font-size: 14px;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
 }
+
 
 .result-content {
   flex: 1;

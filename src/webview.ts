@@ -14,9 +14,18 @@ export function getWebviewContent(
         vscode.Uri.file(path.join(context.extensionPath, 'media', 'webview.css'))
     );
 
+    const iconBase = webview.asWebviewUri(
+      vscode.Uri.joinPath(context.extensionUri, "media", "icons")
+    );
+
+
     return `
         <!DOCTYPE html>
         <html lang="en">
+        <script>
+          const ICON_BASE = "${iconBase}";
+        </script>
+
         <head>
             <meta charset="UTF-8" />
             <meta http-equiv="Content-Security-Policy"
@@ -100,5 +109,6 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
     </div>
 
     <script src="${scriptUri}"></script>
+
     `;
 }

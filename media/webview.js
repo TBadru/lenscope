@@ -4,29 +4,59 @@ const searchBox = document.getElementById("search-input");
 const resultsPane = document.getElementById("results");
 const previewText = document.getElementById("preview-code");
 
+// const FILE_ICONS = {
+//   js: "",
+//   ts: "",
+//   jsx: "",
+//   tsx: "",
+//   rb: "",
+//   py: "",
+//   go: "",
+//   rs: "",
+//   java: "",
+//   php: "",
+//   html: "",
+//   css: "",
+//   scss: "",
+//   json: "",
+//   yml: "",
+//   yaml: "",
+//   md: "",
+//   sh: "",
+//   dockerfile: "",
+//   sql: "",
+//   default: ""
+// };
+
 const FILE_ICONS = {
-  js: "",
-  ts: "",
-  jsx: "",
-  tsx: "",
-  rb: "",
-  py: "",
-  go: "",
-  rs: "",
-  java: "",
-  php: "",
-  html: "",
-  css: "",
-  scss: "",
-  json: "",
-  yml: "",
-  yaml: "",
-  md: "",
-  sh: "",
-  dockerfile: "",
-  sql: "",
-  default: ""
+  rb: "ruby-plain.svg",
+  js: "js.svg",
+  ts: "ts.svg",
+  jsx: "jsx.svg",
+  tsx: "tsx.svg",
+  html: "html.svg",
+  css: "css.svg",
+  json: "json.svg",
+  yml: "yaml-original.svg",
+  yaml: "yaml-original.svg",
+  py: "python.svg",
+  go: "go.svg",
+  rs: "rust.svg",
+  java: "java.svg",
+  php: "php.svg",
+  scss: "scss.svg",
+  md: "markdown.svg",
+  sh: "sh.svg",
+  dockerfile: "dockerfile.svg",
+  sql: "sql.svg",
+  default: "default.svg"
 };
+
+function getFileIconPath(file) {
+    const ext = file.split(".").pop().toLowerCase();
+    return `${ICON_BASE}/${FILE_ICONS[ext] || FILE_ICONS.default}`;
+}
+
 
 
 let results = [];
@@ -128,7 +158,7 @@ function renderResults(items, query) {
         const el = document.createElement("div");
         el.className = "result-item";
 
-        const icon = getFileIcon(item.relative);
+        const iconPath = getFileIconPath(item.relative);
         const fileLabel = `${item.relative}:${item.line}`;
         let matchText = escapeHtml(item.text);
 
@@ -140,7 +170,7 @@ function renderResults(items, query) {
         }
 
         el.innerHTML = `
-          <span class="file-icon">${icon}</span>
+          <img class="file-icon" src="${iconPath}" />
           <div class="result-content">
             <div class="result-file">${escapeHtml(fileLabel)}</div>
             <div class="result-text">${matchText}</div>
