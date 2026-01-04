@@ -36,9 +36,9 @@ export function getWebviewContent(
             <title>Lenscope</title>
         </head>
         <body>
-            ${getHtmlTemplateForLiveGrep(scriptUri)}
-            // ${getHtmlTemplateForFindFiles(scriptUri)}
-            // ${getHtmlTemplateForCurrentBufferFuzzyFind(scriptUri)}
+             ${getHtmlTemplateForLiveGrep(scriptUri)}
+             ${getHtmlTemplateForFindFiles(scriptUri)}
+             ${getHtmlTemplateForCurrentBufferFuzzyFind(scriptUri)}
 
             <!-- Inline JS for keyboard selection in results -->
             <script>

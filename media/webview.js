@@ -37,6 +37,7 @@ const FILE_ICONS = {
   tsx: "tsx.svg",
   html: "html5-original.svg",
   css: "css.svg",
+  scss: "sass-original.svg",
   json: "json.svg",
   yml: "yaml-original.svg",
   yaml: "yaml-original.svg",
@@ -58,6 +59,11 @@ const FILE_ICONS = {
   cpp: "cplusplus-original.svg",
   c: "c.svg",
   cs: "csharp.svg",
+  gitattributes: "git-original.svg",
+  Rakefile: "rails-plain.svg",
+  Gemfile: "rails-plain.svg",
+  Makefile: "cmake-original.svg",
+  txt: "text.svg",
   default: "default.svg"
 };
 
