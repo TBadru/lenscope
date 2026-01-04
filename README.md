@@ -11,7 +11,6 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 ## What Is Lenscope?
  
 `lenscope` is a fuzzy finder over list/files VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) & powered by [ripgrep](https://github.com/BurntSushi/ripgrep) . 
-a fuzzy finder over list ([ripgrep](https://github.com/BurntSushi/ripgrep)) VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ## What Is ripgrep?
 
@@ -20,8 +19,6 @@ ripgrep is a line-oriented search tool that recursively searches the current dir
 ## Getting Started
 
 VS Code [>v1.106.1](https://github.com/microsoft/vscode/releases/tag/1.106.1) or the latest insiders build is required for `lenscope` to work.
-
-VS Codium [>v1.105](https://github.com/VSCodium/vscodium/releases/tag/1.105.06808) is required for `lenscope` to work.
 
 
 ### Required dependencies
