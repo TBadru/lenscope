@@ -26,6 +26,19 @@ const previewText = document.getElementById("preview-code");
 //   dockerfile: "",
 //   sql: "",
 //   default: ""
+//  cpp: "",
+//  c: "",
+//  cs: "",
+//  lua: "",
+//  ps1: "",
+//  razor: "",
+//  zig: "",
+//  nix: "",
+//  gitattributes: "",
+//  Rakefile: "",
+//  Gemfile: "",
+//  Makefile: "",
+//  txt: ""
 // };
 
 const FILE_ICONS = {
