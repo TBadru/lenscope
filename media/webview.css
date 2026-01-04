@@ -8,6 +8,8 @@
     --text-dim: #a6adc8;
     --hover-bg: rgba(137, 180, 250, 0.10);
     --select-bg: rgba(137, 180, 250, 0.22);
+    --vscode-editor-background: white;
+    --vscode-editor-foreground: red;
 }
 
 /* Entire background behind the floating picker */
@@ -41,6 +43,21 @@ body {
     border-bottom: 1px solid var(--border);
     margin: 0 0.5rem;
 }
+
+/* Preview Content to match editor's theme*/
+.preview {
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  /* font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  line-height: var(--vscode-editor-line-height); */
+
+  padding: 8px 12px;
+  overflow: auto;
+  white-space: pre;
+  border-left: 1px solid var(--vscode-editorWidget-border);
+}
+
 
 /* Pane Headers: Live Grep, Results, Preview */
 .pane-header {
