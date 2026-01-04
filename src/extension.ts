@@ -19,30 +19,78 @@ interface GrepResult {
 // cached RG path
 let cachedRgPath: string | null = null;
 
+// async function getRgPath(): Promise<string> {
+//     if (cachedRgPath !== null) return cachedRgPath;
+
+//     try {
+//         const isWindows = os.platform() === "win32";
+//         const cmd = isWindows ? "where rg" : "which rg";
+
+//         const { stdout } = await execPromise(cmd, {
+//             shell: isWindows ? undefined : "/bin/zsh"
+//         });
+
+//         const rgPath = stdout.split("\n")[0].trim();
+//         if (!rgPath) throw new Error("rg not found");
+
+//         cachedRgPath = rgPath;
+//         console.log("Found rg at:", rgPath);
+//         return rgPath;
+
+//     } catch (err) {
+//         vscode.window.showErrorMessage("ripgrep (rg) not found in PATH.");
+//         cachedRgPath = "";
+//         return "";
+//     }
 async function getRgPath(): Promise<string> {
     if (cachedRgPath !== null) return cachedRgPath;
 
-    try {
-        const isWindows = os.platform() === "win32";
-        const cmd = isWindows ? "where rg" : "which rg";
+    const isWindows = os.platform() === "win32";
 
-        const { stdout } = await execPromise(cmd, {
-            shell: isWindows ? undefined : "/bin/zsh"
+    try {
+        // 1. Windows
+        if (isWindows) {
+            const { stdout } = await execPromise("where rg");
+            cachedRgPath = stdout.split("\n")[0].trim();
+            return cachedRgPath;
+        }
+
+        // 2. macOS / Linux
+        const commonPaths = [
+            "/opt/homebrew/bin/rg",   // Apple Silicon Homebrew
+            "/usr/local/bin/rg",      // Intel Homebrew
+            "/usr/bin/rg"             // System install
+        ];
+
+        for (const p of commonPaths) {
+            if (fs.existsSync(p)) {
+                cachedRgPath = p;
+                console.log("Found rg at:", p);
+                return p;
+            }
+        }
+
+        // 3. Fallback to `which`
+        const { stdout } = await execPromise("which rg", {
+            shell: "/bin/zsh"
         });
 
         const rgPath = stdout.split("\n")[0].trim();
         if (!rgPath) throw new Error("rg not found");
 
         cachedRgPath = rgPath;
-        console.log("Found rg at:", rgPath);
+        console.log("Found rg via which:", rgPath);
         return rgPath;
 
     } catch (err) {
-        vscode.window.showErrorMessage("ripgrep (rg) not found in PATH.");
+        vscode.window.showErrorMessage(
+            "ripgrep (rg) not found. Install with: brew install ripgrep"
+        );
         cachedRgPath = "";
         return "";
     }
 }
+
 
 export function activate(context: vscode.ExtensionContext) {
 
