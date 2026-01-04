@@ -10,7 +10,7 @@ let selectedIndex = -1;
 let debounceTimeout = null;
 const DEBOUNCE_MS = 200;
 
-//  Escape HTML 
+// escape HTML 
 function escapeHtml(str) {
     if (!str) return '';
     return str
@@ -21,7 +21,7 @@ function escapeHtml(str) {
         .replace(/'/g, "&#039;");
 }
 
-//  Search Input with Debounce 
+// search input with debounce
 searchBox.addEventListener("input", () => {
     const query = searchBox.value.trim();
 
@@ -40,7 +40,7 @@ searchBox.addEventListener("input", () => {
     }, DEBOUNCE_MS);
 });
 
-// Keep search box focused
+// keep search box focused
 searchBox.focus();
 
 //  Keyboard Navigation 
@@ -56,7 +56,7 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-//  Mouse Click Selection 
+// mouse click selection
 resultsPane.addEventListener("click", (e) => {
     const target = e.target.closest(".result-item");
     if (!target) return;
@@ -69,7 +69,7 @@ resultsPane.addEventListener("click", (e) => {
     requestPreview();
 });
 
-//  Receive Messages from Extension 
+// receive messages from extension
 window.addEventListener("message", (event) => {
     const msg = event.data;
 
@@ -92,30 +92,44 @@ window.addEventListener("message", (event) => {
     }
 });
 
-//  Render Results 
+//  Render Results
 function renderResults(items, query) {
     resultsPane.innerHTML = "";
-    const regex = query ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi") : null;
 
-    items.forEach((text, index) => {
+    const regex = query
+        ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi")
+        : null;
+
+    items.forEach((item, index) => {
         const el = document.createElement("div");
         el.className = "result-item";
 
-        const safeText = escapeHtml(text);
+        // const label = `${item.file}:${item.line}: ${item.text}`;
+        const label = `${item.relative}:${item.line}: ${item.text}`;
+
+        const safeText = escapeHtml(label);
+
         if (regex) {
-            el.innerHTML = safeText.replace(regex, match => `<span class="match">${match}</span>`);
+            el.innerHTML = safeText.replace(
+                regex,
+                (match) => `<span class="match">${match}</span>`
+            );
         } else {
             el.innerHTML = safeText;
         }
 
-        if (index === selectedIndex) el.classList.add("selected");
+        if (index === selectedIndex) {
+            el.classList.add("selected");
+        }
+
         resultsPane.appendChild(el);
     });
 
     scrollToSelected();
 }
 
-//  Navigation 
+
+//  navigation
 function moveSelection(delta) {
     if (!results.length) return;
 
@@ -132,18 +146,33 @@ function updateSelectionUI() {
     if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
 }
 
-//  Preview 
+// preview
 function requestPreview() {
     if (selectedIndex < 0 || selectedIndex >= results.length) {
         previewText.textContent = "(preview empty)";
         return;
     }
-    vscode.postMessage({ type: "preview", file: results[selectedIndex] });
+
+    const item = results[selectedIndex];
+
+    vscode.postMessage({
+        type: "preview",
+        file: item.file,
+        line: item.line
+    });
 }
 
-//  Open File 
+
+// open file
 function openSelectedFile() {
     if (!results.length || selectedIndex < 0) return;
-    const file = results[selectedIndex].split(":")[0];
-    vscode.postMessage({ type: "openFile", file });
+
+    const item = results[selectedIndex];
+
+    vscode.postMessage({
+        type: "openFile",
+        file: item.file,
+        line: item.line
+    });
 }
+
