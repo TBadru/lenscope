@@ -50,8 +50,8 @@ Lenscope built-in features/functions
 v0.0.1
 | Functions             | Description                                                                                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `find_files`  | Lists files in your current working directory, respects .gitignore ❌
 | `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore. Requires ripgrep    ✅        |
+| `find_files`  | Lists files in your current working directory, respects .gitignore ❌
 | `current_buffer_fuzzy_find` | Live fuzzy search inside of the currently open buffer ❌
 
 
