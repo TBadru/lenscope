@@ -112,12 +112,6 @@ body {
     border-left: 2px solid var(--accent);
 }
 
-/* File icons */
-.result-item .file-icon {
-    margin-right: 6px;
-    opacity: 0.9;
-}
-
 /* - Preview Pane - */
 #preview pre {
     margin: 0;
@@ -227,13 +221,6 @@ body {
     border-left: 2px solid var(--accent);
 }
 
-/* File icons */
-.result-item .file-icon {
-    margin-right: 6px;
-    opacity: 0.9;
-}
-
-
 /* Preview Pane */
 #preview {
     flex: 1;
@@ -252,4 +239,42 @@ body {
 .match {
     background: rgba(249, 226, 175, 0.25);
     color: #aff9b0;
+}
+
+.result-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.file-icon {
+  width: 20px;
+  text-align: center;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+.result-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.result-file {
+  font-size: 11px;
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-text {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-item.selected {
+  background: rgba(100, 150, 255, 0.15);
 }

@@ -4,6 +4,31 @@ const searchBox = document.getElementById("search-input");
 const resultsPane = document.getElementById("results");
 const previewText = document.getElementById("preview-code");
 
+const FILE_ICONS = {
+  js: "",
+  ts: "",
+  jsx: "",
+  tsx: "",
+  rb: "",
+  py: "",
+  go: "",
+  rs: "",
+  java: "",
+  php: "",
+  html: "",
+  css: "",
+  scss: "",
+  json: "",
+  yml: "",
+  yaml: "",
+  md: "",
+  sh: "",
+  dockerfile: "",
+  sql: "",
+  default: ""
+};
+
+
 let results = [];
 let selectedIndex = -1;
 
@@ -92,7 +117,6 @@ window.addEventListener("message", (event) => {
     }
 });
 
-//  Render Results
 function renderResults(items, query) {
     resultsPane.innerHTML = "";
 
@@ -104,30 +128,46 @@ function renderResults(items, query) {
         const el = document.createElement("div");
         el.className = "result-item";
 
-        // const label = `${item.file}:${item.line}: ${item.text}`;
-        const label = `${item.relative}:${item.line}: ${item.text}`;
-
-        const safeText = escapeHtml(label);
+        const icon = getFileIcon(item.relative);
+        const fileLabel = `${item.relative}:${item.line}`;
+        let matchText = escapeHtml(item.text);
 
         if (regex) {
-            el.innerHTML = safeText.replace(
+            matchText = matchText.replace(
                 regex,
-                (match) => `<span class="match">${match}</span>`
+                m => `<span class="match">${m}</span>`
             );
-        } else {
-            el.innerHTML = safeText;
         }
 
-        if (index === selectedIndex) {
-            el.classList.add("selected");
-        }
+        el.innerHTML = `
+          <span class="file-icon">${icon}</span>
+          <div class="result-content">
+            <div class="result-file">${escapeHtml(fileLabel)}</div>
+            <div class="result-text">${matchText}</div>
+          </div>
+        `;
 
+        if (index === selectedIndex) el.classList.add("selected");
         resultsPane.appendChild(el);
     });
 
     scrollToSelected();
 }
 
+
+// get file extension
+function getFileExtension(path) {
+    const name = path.split("/").pop().toLowerCase();
+    if (name === "dockerfile") return "dockerfile";
+    const parts = name.split(".");
+    return parts.length > 1 ? parts.pop() : "";
+}
+
+// get icon for file
+function getFileIcon(path) {
+    const ext = getFileExtension(path);
+    return FILE_ICONS[ext] || FILE_ICONS.default;
+}
 
 //  navigation
 function moveSelection(delta) {
