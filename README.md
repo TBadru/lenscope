@@ -4,6 +4,10 @@
 
 Gaze deeply into unknown regions using the power of the moon 🔭.
 
+![live_grep Preview](./media/resources/live_grep.png)
+
+
+![live_grep Preview](./media/resources/live_grep2.png)
 ## What Is Lenscope?
  
 `lenscope` is a fuzzy finder over list/files VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) & powered by [ripgrep](https://github.com/BurntSushi/ripgrep) . 
