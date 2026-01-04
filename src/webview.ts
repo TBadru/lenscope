@@ -36,7 +36,9 @@ export function getWebviewContent(
             <title>Lenscope</title>
         </head>
         <body>
-            ${getHtmlTemplate(scriptUri)}
+            ${getHtmlTemplateForLiveGrep(scriptUri)}
+            // ${getHtmlTemplateForFindFiles(scriptUri)}
+            // ${getHtmlTemplateForCurrentBufferFuzzyFind(scriptUri)}
 
             <!-- Inline JS for keyboard selection in results -->
             <script>
@@ -72,8 +74,8 @@ export function getWebviewContent(
     `;
 }
 
-// HTML template with Telescope-style headers
-function getHtmlTemplate(scriptUri: vscode.Uri) {
+// HTML template for the live grep interface
+function getHtmlTemplateForLiveGrep(scriptUri: vscode.Uri) {
     return `
   <div id="lenscope-container">
 
@@ -101,7 +103,8 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
                 <div class="pane-header">
                     <span>grep preview</span>
                 </div>
-                <pre><code id="preview-code"></code></pre>
+                <!--  <pre><code id="preview-code"></code></pre> -->
+                <pre id="preview-code" class="preview"></pre>
             </div>
 
         </div>
@@ -111,4 +114,18 @@ function getHtmlTemplate(scriptUri: vscode.Uri) {
     <script src="${scriptUri}"></script>
 
     `;
+
 }
+
+// HTML template for the find files interface
+function getHtmlTemplateForFindFiles(scriptUri: vscode.Uri) {
+    return `
+        `;
+}
+
+// HTML template for the find files interface
+function getHtmlTemplateForCurrentBufferFuzzyFind(scriptUri: vscode.Uri) {
+    return `
+        `;
+}
+
