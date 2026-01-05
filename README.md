@@ -51,25 +51,6 @@ If you're a **Windows Scoop** user, then you can install ripgrep from the
 $ scoop install ripgrep
 ```
 
-
-```
-$ brew install ripgrep
-```
-
-If you're a **Windows Chocolatey** user, then you can install ripgrep from the
-[official repo](https://chocolatey.org/packages/ripgrep):
-
-```
-$ choco install ripgrep
-```
-
-If you're a **Windows Scoop** user, then you can install ripgrep from the
-[official bucket](https://github.com/ScoopInstaller/Main/blob/master/bucket/ripgrep.json):
-
-```
-$ scoop install ripgrep
-```
-
 If you're a **Windows Winget** user, then you can install ripgrep from the
 [winget-pkgs](https://github.com/microsoft/winget-pkgs/tree/master/manifests/b/BurntSushi/ripgrep)
 repository:
