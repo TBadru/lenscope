@@ -1,6 +1,6 @@
 /* Floating Picker (Sharp / Transparent) */
 :root {
-    --bg-solid: rgb(127, 127, 215);
+    --bg-solid: rgba(30, 30, 46, 0.45);
     --bg-transparent: rgba(30, 30, 46, 0.45);
     --border: green;
     --accent: #89b4fa;

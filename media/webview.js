@@ -41,44 +41,157 @@ const previewText = document.getElementById("preview-code");
 //  txt: ""
 // };
 
+// const FILE_ICONS = {
+//   rb: "ruby-original.svg",
+//   erb: "ruby-original.svg",
+//   js: "javascript-original.svg",
+//   ts: "typescript-original.svg",
+//   jsx: "jsx.svg",
+//   tsx: "tsx.svg",
+//   html: "html5-original.svg",
+//   css: "css.svg",
+//   scss: "sass-original.svg",
+//   json: "json.svg",
+//   yml: "yaml-original.svg",
+//   yaml: "yaml-original.svg",
+//   py: "python-original.svg",
+//   go: "go-original-wordmark.svg",
+//   rs: "rust-original.svg",
+//   java: "java-original.svg",
+//   php: "php-original.svg",
+//   scss: "sass-original.svg",
+//   md: "markdown.svg",
+//   sh: "sh.svg",
+//   dockerfile: "docker-plain.svg",
+//   sql: "sql.svg",
+//   lua: "lua-original.svg",
+//   ps1: "powershell-original.svg",
+//   razor: "blazor-original.svg",
+//   zig: "zig-original.svg",
+//   nix: "nixos-original.svg",
+//   cpp: "cplusplus-original.svg",
+//   c: "c.svg",
+//   cs: "csharp.svg",
+//   gitattributes: "git-original.svg",
+//   Rakefile: "rails-plain.svg",
+//   Gemfile: "rails-plain.svg",
+//   Makefile: "cmake-original.svg",
+//   txt: "text.svg",
+//   default: "default.svg"
+// };
+
+
 const FILE_ICONS = {
+  /* Ruby */
   rb: "ruby-original.svg",
   erb: "ruby-original.svg",
+  rake: "ruby-original.svg",
+
+  /* JavaScript / TypeScript */
   js: "javascript-original.svg",
+  mjs: "javascript-original.svg",
+  cjs: "javascript-original.svg",
   ts: "typescript-original.svg",
-  jsx: "jsx.svg",
-  tsx: "tsx.svg",
+  jsx: "react-original.svg",
+  tsx: "react-original.svg",
+
+  /* Web */
   html: "html5-original.svg",
-  css: "css.svg",
+  htm: "html5-original.svg",
+  css: "css3-original.svg",
   scss: "sass-original.svg",
+  sass: "sass-original.svg",
+  less: "less-plain-wordmark.svg",
+
+  /* Data / Config */
   json: "json.svg",
+  jsonc: "json.svg",
   yml: "yaml-original.svg",
   yaml: "yaml-original.svg",
+  toml: "toml-original.svg",
+  ini: "settings.svg",
+  env: "settings.svg",
+
+  /* Python */
   py: "python-original.svg",
-  go: "go-original-wordmark.svg",
+  pyw: "python-original.svg",
+
+  /* Go */
+  go: "go-original.svg",
+  mod: "go-original.svg",
+
+  /* Rust */
   rs: "rust-original.svg",
+
+  /* JVM */
   java: "java-original.svg",
+  kt: "kotlin-original.svg",
+  kts: "kotlin-original.svg",
+  scala: "scala-original.svg",
+  groovy: "groovy-original.svg",
+
+  /* PHP */
   php: "php-original.svg",
-  scss: "sass-original.svg",
-  md: "markdown.svg",
-  sh: "sh.svg",
-  dockerfile: "docker-plain.svg",
+
+  /* Databases */
   sql: "sql.svg",
-  lua: "lua-original.svg",
-  ps1: "powershell-original.svg",
-  razor: "blazor-original.svg",
+  prisma: "prisma-original.svg",
+
+  /* Shell */
+  sh: "bash-original.svg",
+  bash: "bash-original.svg",
+  zsh: "bash-original.svg",
+  fish: "bash-original.svg",
+
+  /* Containers / DevOps */
+  Dockerfile: "docker-original.svg",
+  dockerignore: "docker-original.svg",
+  tf: "terraform-original.svg",
+  tfvars: "terraform-original.svg",
+  helm: "helm-original.svg",
+
+  /* C family */
+  c: "c-original.svg",
+  h: "c-original.svg",
+  cpp: "cplusplus-original.svg",
+  hpp: "cplusplus-original.svg",
+  cc: "cplusplus-original.svg",
+  cs: "csharp-original.svg",
+
+  /* Systems */
   zig: "zig-original.svg",
   nix: "nixos-original.svg",
-  cpp: "cplusplus-original.svg",
-  c: "c.svg",
-  cs: "csharp.svg",
-  gitattributes: "git-original.svg",
-  Rakefile: "rails-plain.svg",
-  Gemfile: "rails-plain.svg",
+
+  /* Lua */
+  lua: "lua-original.svg",
+
+  /* PowerShell */
+  ps1: "powershell-original.svg",
+
+  /* .NET / Razor */
+  razor: "blazor-original.svg",
+  csproj: "dotnetcore-original.svg",
+
+  /* Build systems */
   Makefile: "cmake-original.svg",
+  makefile: "cmake-original.svg",
+  cmake: "cmake-original.svg",
+
+  /* Version control */
+  gitignore: "git-original.svg",
+  gitattributes: "git-original.svg",
+  gitmodules: "git-original.svg",
+
+  /* Docs */
+  md: "markdown-original.svg",
+  mdx: "markdown-original.svg",
+  rst: "markdown-original.svg",
   txt: "text.svg",
+
+  /* Default fallback */
   default: "default.svg"
 };
+
 
 function getFileIconPath(file) {
     const ext = file.split(".").pop().toLowerCase();
