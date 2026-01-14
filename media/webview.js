@@ -140,7 +140,7 @@ const FILE_ICONS = {
   /* Shell */
   sh: "bash-original.svg",
   bash: "bash-original.svg",
-  zsh: "bash-original.svg",
+  zsh: "zsh-original.svg",
   fish: "bash-original.svg",
 
   /* Containers / DevOps */
