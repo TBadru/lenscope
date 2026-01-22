@@ -19,29 +19,9 @@ interface GrepResult {
 // cached RG path
 let cachedRgPath: string | null = null;
 
-// async function getRgPath(): Promise<string> {
-//     if (cachedRgPath !== null) return cachedRgPath;
 
-//     try {
-//         const isWindows = os.platform() === "win32";
-//         const cmd = isWindows ? "where rg" : "which rg";
 
-//         const { stdout } = await execPromise(cmd, {
-//             shell: isWindows ? undefined : "/bin/zsh"
-//         });
 
-//         const rgPath = stdout.split("\n")[0].trim();
-//         if (!rgPath) throw new Error("rg not found");
-
-//         cachedRgPath = rgPath;
-//         console.log("Found rg at:", rgPath);
-//         return rgPath;
-
-//     } catch (err) {
-//         vscode.window.showErrorMessage("ripgrep (rg) not found in PATH.");
-//         cachedRgPath = "";
-//         return "";
-//     }
 async function getRgPath(): Promise<string> {
     if (cachedRgPath !== null) return cachedRgPath;
 
@@ -51,8 +31,11 @@ async function getRgPath(): Promise<string> {
         // 1. Windows
         if (isWindows) {
             const { stdout } = await execPromise("where rg");
-            cachedRgPath = stdout.split("\n")[0].trim();
-            return cachedRgPath;
+            const rgPath = stdout.split(/\r?\n/)[0].trim();
+            if (rgPath && fs.existsSync(rgPath)) {
+                cachedRgPath = rgPath;
+                return cachedRgPath;
+            }
         }
 
         // 2. macOS / Linux
@@ -75,8 +58,8 @@ async function getRgPath(): Promise<string> {
             shell: "/bin/zsh"
         });
 
-        const rgPath = stdout.split("\n")[0].trim();
-        if (!rgPath) throw new Error("rg not found");
+        const rgPath = stdout.split(/\r?\n/)[0].trim();
+        if (!rgPath || !fs.existsSync(rgPath)) throw new Error("rg not found");
 
         cachedRgPath = rgPath;
         console.log("Found rg via which:", rgPath);
@@ -84,7 +67,7 @@ async function getRgPath(): Promise<string> {
 
     } catch (err) {
         vscode.window.showErrorMessage(
-            "ripgrep (rg) not found. Install with: brew install ripgrep"
+            "ripgrep (rg) not found. Install ripgrep"
         );
         cachedRgPath = "";
         return "";
