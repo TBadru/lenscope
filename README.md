@@ -3,7 +3,7 @@
 **WORK IN PROGRESS**
 
 Gaze deeply into unknown regions using the power of the moon 🔭.
-
+## 🖼️ Screenshots
 ![live_grep Preview](./media/resources/live_grep.png)
 
 
