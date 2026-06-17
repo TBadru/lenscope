@@ -10,7 +10,7 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 ![live_grep Preview](./media/resources/live_grep2.png)
 ## What Is Lenscope?
  
-`lenscope` is a fuzzy finder over list/files VS code extension inspired by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) & powered by [ripgrep](https://github.com/BurntSushi/ripgrep) . 
+`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code [ripgrep](https://github.com/BurntSushi/ripgrep)
 
 ## What Is ripgrep?
 
@@ -18,7 +18,7 @@ ripgrep is a line-oriented search tool that recursively searches the current dir
 
 ## Getting Started
 
-VS Code [>v1.106.1](https://github.com/microsoft/vscode/releases/tag/1.106.1) or the latest insiders build is required for `lenscope` to work.
+VS Code [>v1.120.0](https://github.com/microsoft/vscode/releases/tag/1.120.0) or the latest insiders build is required for `lenscope` to work.
 
 
 ### Required dependencies
@@ -58,6 +58,22 @@ repository:
 ```
 $ winget install BurntSushi.ripgrep.MSVC
 ```
+
+## Tooling
+
+Lenscope currently uses:
+
+- TypeScript
+
+- Vitest
+
+- ESLint
+
+- esbuild
+
+- npm
+
+The committed package-lock.json is the source of truth for dependency versions.
 
 ## Features/Functions
 
