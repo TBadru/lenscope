@@ -10,11 +10,11 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 ![live_grep Preview](./media/resources/live_grep2.png)
 ## What Is Lenscope?
  
-`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code [ripgrep](https://github.com/BurntSushi/ripgrep)
+`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code powered by  [ripgrep](https://github.com/BurntSushi/ripgrep)
 
 ## What Is ripgrep?
 
-ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern. By default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.
+ripgrep is a line-oriented search tool that recursively searches directories for a regex pattern. By default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.
 
 ## Getting Started
 
