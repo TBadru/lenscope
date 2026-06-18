@@ -10,7 +10,7 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 ![live_grep Preview](./media/resources/live_grep2.png)
 ## What Is Lenscope?
  
-`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code powered by  [ripgrep](https://github.com/BurntSushi/ripgrep)
+`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code powered by  [ripgrep](https://github.com/BurntSushi/ripgrep).
 
 ## What Is ripgrep?
 
@@ -59,6 +59,52 @@ repository:
 $ winget install BurntSushi.ripgrep.MSVC
 ```
 
+## Development
+### Prerequisites
+- Node.js 24 LTS
+- npm
+- VS Code
+- ripgrep (rg)
+   
+### Setup
+
+Clone the repository:
+
+```
+$ git clone https://github.com/TBadru/lenscope.git
+```
+
+```
+$ cd lenscope
+```
+
+Use the project's Node version:
+
+```
+$ nvm use
+```
+Install dependencies:
+```
+$ npm ci
+```
+Verify everything is working:
+```
+$ npm run check-types
+```
+```
+$ npm run lint
+```
+```
+$ npm test
+```
+### Running the Extension
+
+Open the project in VS Code and press:
+
+F5
+
+This launches an Extension Development Host with `Lenscope` loaded and accessible from the Command palette.
+
 ## Tooling
 
 Lenscope currently uses:
@@ -77,16 +123,16 @@ The committed package-lock.json is the source of truth for dependency versions.
 
 ## Features/Functions
 
-Lenscope built-in features/functions
+Lenscope built-in features/functions soo far;
 
-v0.0.1
+
 | Functions             | Description                                                                                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore. Requires ripgrep    ✅        |
+| `live_grep`   | Search for a string in your current working directory and get results live as you type, respects .gitignore    ✅        |
 | `find_files`  | Lists files in your current working directory, respects .gitignore ❌
 | `current_buffer_fuzzy_find` | Live fuzzy search inside of the currently open buffer ❌
 
 
 ## License
 
-MIT License
+[The Unlicense](https://github.com/TBadru/lenscope/blob/main/LICENSE)
