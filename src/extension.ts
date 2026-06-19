@@ -22,7 +22,7 @@ let cachedRgPath: string | null = null;
 
 
 async function getRgPath(): Promise<string> {
-    if (cachedRgPath !== null) return cachedRgPath;
+    if (cachedRgPath !== null) {return cachedRgPath;}
 
     const isWindows = os.platform() === "win32";
 
@@ -58,7 +58,7 @@ async function getRgPath(): Promise<string> {
         });
 
         const rgPath = stdout.split(/\r?\n/)[0].trim();
-        if (!rgPath || !fs.existsSync(rgPath)) throw new Error("rg not found");
+        if (!rgPath || !fs.existsSync(rgPath)) {throw new Error("rg not found");}
 
         cachedRgPath = rgPath;
         console.log("Found rg via which:", rgPath);
@@ -105,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             if (msg.type === "search") {
 
-                if (searchTimeout) clearTimeout(searchTimeout);
+                if (searchTimeout) {clearTimeout(searchTimeout);}
 
                 searchTimeout = setTimeout(async () => {
                     const query: string = msg.query || "";
@@ -182,14 +182,14 @@ export function deactivate() { }
 
 // ripgrep search
 async function ripgrepSearch(query: string): Promise<GrepResult[]> {
-    if (!query.trim()) return [];
+    if (!query.trim()) {return [];}
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) return [];
+    if (!workspaceFolders) {return [];}
     const workspacePath = workspaceFolders[0].uri.fsPath;
 
     const rgPath = await getRgPath();
-    if (!rgPath) return [];
+    if (!rgPath) {return [];}
 
     const safeQuery = query.replace(/"/g, '\\"');
     const cmd = `"${rgPath}" -i --vimgrep --fixed-strings "${safeQuery}" .`;
@@ -205,7 +205,7 @@ async function ripgrepSearch(query: string): Promise<GrepResult[]> {
             .filter(Boolean)
             .map(line => {
                 const match = line.match(/^(.+?):(\d+):(\d+):(.*)$/);
-                if (!match) return null;
+                if (!match) {return null;}
 
                 let [, file, lineNum, , text] = match;
 
