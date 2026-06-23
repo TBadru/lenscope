@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import * as fs from 'fs';
 import * as util from 'util';
 import { getWebviewContent } from './webview';
@@ -8,9 +8,11 @@ import * as path from "path";
 
 
 const execPromise = util.promisify(exec);
+const execFilePromise = util.promisify(execFile);
 
 interface GrepResult {
     file: string;
+    relative: string;
     line: number;
     text: string;
 }
@@ -95,9 +97,9 @@ export function activate(context: vscode.ExtensionContext) {
         panel.webview.html = getWebviewContent(context, panel.webview);
         panel.onDidDispose(() => { panel = null; });
 
-        let FuseModule: any;
         let searchTimeout: NodeJS.Timeout | null = null;
         const DEBOUNCE_MS = 250;
+        let searchVersion = 0;
 
         panel.webview.onDidReceiveMessage(async (msg: any) => {
 
@@ -106,25 +108,15 @@ export function activate(context: vscode.ExtensionContext) {
             if (msg.type === "search") {
 
                 if (searchTimeout) {clearTimeout(searchTimeout);}
+                const currentSearch = ++searchVersion;
 
                 searchTimeout = setTimeout(async () => {
                     const query: string = msg.query || "";
-                    const rawResults = await ripgrepSearch(query);
+                    const results = await ripgrepSearch(query);
 
-                    // if (!FuseModule) FuseModule = (await import("fuse.js")).default;
-                    if (!FuseModule) {
-                        FuseModule = (await import("fuse.js")).default;
+                    if (currentSearch !== searchVersion) {
+                        return;
                     }
-
-                    const fuse = new FuseModule(rawResults, {
-                        keys: ["file", "text"],
-                        includeScore: true,
-                        threshold: 0.5,
-                        isCaseSensitive: false
-                    });
-
-                    const results: GrepResult[] = 
-                    query? fuse .search(query).map((r: any) => r.item): rawResults;
 
                     panel?.webview.postMessage({
                       type: "results",
@@ -191,13 +183,17 @@ async function ripgrepSearch(query: string): Promise<GrepResult[]> {
     const rgPath = await getRgPath();
     if (!rgPath) {return [];}
 
-    const safeQuery = query.replace(/"/g, '\\"');
-    const cmd = `"${rgPath}" -i --vimgrep --fixed-strings "${safeQuery}" .`;
-
     try {
-        const { stdout } = await execPromise(cmd, {
+        const { stdout } = await execFilePromise(rgPath, [
+            "-i",
+            "--vimgrep",
+            "--fixed-strings",
+            "--",
+            query,
+            "."
+        ], {
             cwd: workspacePath,
-            maxBuffer: 1024 * 1024 * 10
+            maxBuffer: 1024 * 1024 * 100
         });
 
         return stdout
@@ -220,8 +216,7 @@ async function ripgrepSearch(query: string): Promise<GrepResult[]> {
                     text
                 } as GrepResult;
             })
-            .filter((v): v is GrepResult => Boolean(v))
-            .slice(0, 50);
+            .filter((v): v is GrepResult => Boolean(v));
 
     } catch {
         return [];
