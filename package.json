@@ -1,10 +1,15 @@
 {
-  "name": "Lenscope",
+  "name": "lenscope",
   "displayName": "lenscope",
+  "publisher": "tbadru",
   "description": "a fuzzy finder over lists (ripgrep) VS code extension",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.120.0"
+  },
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/tbadru/lenscope.git"
   },
   "categories": [
     "Other"
@@ -66,6 +71,7 @@
     "@types/vscode": "1.120.0",
     "@vitest/coverage-v8": "4.1.9",
     "@vscode/test-electron": "3.0.0",
+    "@vscode/vsce": "3.9.2",
     "esbuild": "0.28.1",
     "eslint": "10.5.0",
     "npm-run-all": "4.1.5",
