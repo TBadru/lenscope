@@ -377,8 +377,8 @@ searchBox.focus();
 document.addEventListener("keydown", (e) => {
     if (!results.length) return;
 
-    if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); moveSelection(1); }
-    if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); moveSelection(-1); }
+    if (e.key === "ArrowDown") { e.preventDefault(); moveSelection(1); }
+    if (e.key === "ArrowUp") { e.preventDefault(); moveSelection(-1); }
     if (e.key === "Enter") { e.preventDefault(); openSelectedFile(); }
     if (e.key === "Escape") {
         e.preventDefault();
