@@ -127,6 +127,8 @@ function getFileIconPath(file) {
 let results = [];
 let selectedIndex = -1;
 let currentPreviewFile = "";
+let activeSearchId = 0;
+let activePreviewId = 0;
 
 let debounceTimeout = null;
 const DEBOUNCE_MS = 200;
@@ -348,17 +350,22 @@ searchBox.addEventListener("input", () => {
 
     if (debounceTimeout) clearTimeout(debounceTimeout);
 
-    debounceTimeout = setTimeout(() => {
-        if (!query) {
-            results = [];
-            selectedIndex = -1;
-            currentPreviewFile = "";
-            resultsList.innerHTML = "<div class='placeholder'>No results yet</div>";
-            renderPreview("(preview empty)");
-            updateResultCount();
-            return;
-        }
+    activeSearchId++;
+    activePreviewId++;
+    results = [];
+    selectedIndex = -1;
+    currentPreviewFile = "";
+    renderPreview("(preview empty)");
+    updateResultCount();
+    vscode.postMessage({ type: "cancelSearch" });
 
+    if (!query) {
+        resultsList.innerHTML = "<div class='placeholder'>No results yet</div>";
+        return;
+    }
+
+    resultsList.innerHTML = "<div class='placeholder'>Searching...</div>";
+    debounceTimeout = setTimeout(() => {
         vscode.postMessage({ type: "search", query });
     }, DEBOUNCE_MS);
 });
@@ -370,8 +377,8 @@ searchBox.focus();
 document.addEventListener("keydown", (e) => {
     if (!results.length) return;
 
-    if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); moveSelection(1); }
-    if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); moveSelection(-1); }
+    if (e.key === "ArrowDown") { e.preventDefault(); moveSelection(1); }
+    if (e.key === "ArrowUp") { e.preventDefault(); moveSelection(-1); }
     if (e.key === "Enter") { e.preventDefault(); openSelectedFile(); }
     if (e.key === "Escape") {
         e.preventDefault();
@@ -384,8 +391,8 @@ resultsList.addEventListener("click", (e) => {
     const target = e.target.closest(".result-item");
     if (!target) return;
 
-    const index = Array.from(resultsList.querySelectorAll(".result-item")).indexOf(target);
-    if (index < 0) return;
+    const index = Number(target.dataset.index);
+    if (!Number.isInteger(index) || index < 0) return;
 
     selectedIndex = index;
     updateSelectionUI();
@@ -396,6 +403,55 @@ resultsList.addEventListener("click", (e) => {
 // receive messages from extension
 window.addEventListener("message", (event) => {
     const msg = event.data;
+
+    if (msg.type === "searchStart") {
+        activeSearchId = msg.searchId;
+        activePreviewId++;
+        results = [];
+        selectedIndex = -1;
+        currentPreviewFile = "";
+        resultsList.innerHTML = "<div class='placeholder'>Searching...</div>";
+        renderPreview("(preview empty)");
+        updateResultCount();
+    }
+
+    if (msg.type === "appendResults") {
+        if (msg.searchId !== activeSearchId) return;
+
+        const incoming = Array.isArray(msg.results) ? msg.results : [];
+        if (!incoming.length) return;
+
+        const wasEmpty = results.length === 0;
+        const startIndex = results.length;
+        results.push(...incoming);
+
+        if (wasEmpty) {
+            resultsList.innerHTML = "";
+            selectedIndex = 0;
+            currentPreviewFile = results[0].relative || results[0].file || "";
+        }
+
+        appendResults(incoming, startIndex, searchBox.value);
+        updateSelectionUI();
+
+        if (wasEmpty) {
+            requestPreview();
+        }
+
+        updateResultCount();
+    }
+
+    if (msg.type === "searchDone") {
+        if (msg.searchId !== activeSearchId) return;
+
+        if (!results.length) {
+            selectedIndex = -1;
+            currentPreviewFile = "";
+            resultsList.innerHTML = "<div class='no-results'>No results found</div>";
+            renderPreview("(preview empty)");
+            updateResultCount();
+        }
+    }
 
     if (msg.type === "results") {
         results = Array.isArray(msg.results) ? msg.results : [];
@@ -416,45 +472,57 @@ window.addEventListener("message", (event) => {
     }
 
     if (msg.type === "preview") {
+        if (msg.previewId !== undefined && msg.previewId !== activePreviewId) return;
+
         renderPreview(msg.preview || "(preview empty)");
     }
 });
 
 function renderResults(items, query) {
     resultsList.innerHTML = "";
+    appendResults(items, 0, query);
+    scrollToSelected();
+}
 
+function appendResults(items, startIndex, query) {
     const regex = query
         ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi")
         : null;
+    const fragment = document.createDocumentFragment();
 
     items.forEach((item, index) => {
-        const el = document.createElement("div");
-        el.className = "result-item";
-
-        const iconPath = getFileIconPath(item.relative);
-        const fileLabel = `${item.relative}:${item.line}`;
-        let matchText = escapeHtml(item.text);
-
-        if (regex) {
-            matchText = matchText.replace(
-                regex,
-                m => `<span class="match">${m}</span>`
-            );
-        }
-
-        el.innerHTML = `
-          <img class="file-icon" src="${iconPath}" />
-          <div class="result-content">
-            <div class="result-file">${escapeHtml(fileLabel)}</div>
-            <div class="result-text">${matchText}</div>
-          </div>
-        `;
-
-        if (index === selectedIndex) el.classList.add("selected");
-        resultsList.appendChild(el);
+        fragment.appendChild(renderResultItem(item, startIndex + index, regex));
     });
 
-    scrollToSelected();
+    resultsList.appendChild(fragment);
+}
+
+function renderResultItem(item, index, regex) {
+    const el = document.createElement("div");
+    el.className = "result-item";
+    el.dataset.index = String(index);
+
+    const iconPath = getFileIconPath(item.relative);
+    const fileLabel = `${item.relative}:${item.line}`;
+    let matchText = escapeHtml(item.text);
+
+    if (regex) {
+        matchText = matchText.replace(
+            regex,
+            m => `<span class="match">${m}</span>`
+        );
+    }
+
+    el.innerHTML = `
+      <img class="file-icon" src="${iconPath}" />
+      <div class="result-content">
+        <div class="result-file">${escapeHtml(fileLabel)}</div>
+        <div class="result-text">${matchText}</div>
+      </div>
+    `;
+
+    if (index === selectedIndex) el.classList.add("selected");
+    return el;
 }
 
 
@@ -483,10 +551,11 @@ function moveSelection(delta) {
 }
 
 function updateSelectionUI() {
-    const items = resultsList.querySelectorAll(".result-item");
-    items.forEach((el, i) => el.classList.toggle("selected", i === selectedIndex));
+    const currentSelected = resultsList.querySelector(".result-item.selected");
+    if (currentSelected) currentSelected.classList.remove("selected");
 
-    const selectedEl = items[selectedIndex];
+    const selectedEl = resultsList.querySelector(`.result-item[data-index="${selectedIndex}"]`);
+    if (selectedEl) selectedEl.classList.add("selected");
     if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
 }
 
@@ -499,15 +568,18 @@ function scrollToSelected() {
 function requestPreview() {
     if (selectedIndex < 0 || selectedIndex >= results.length) {
         currentPreviewFile = "";
+        activePreviewId++;
         renderPreview("(preview empty)");
         return;
     }
 
     const item = results[selectedIndex];
     currentPreviewFile = item.relative || item.file || "";
+    const previewId = ++activePreviewId;
 
     vscode.postMessage({
         type: "preview",
+        previewId,
         file: item.file,
         line: item.line
     });
