@@ -84,7 +84,11 @@ function getHtmlTemplateForLiveGrep(scriptUri: vscode.Uri) {
             <div class="pane-header">
                 <span>live grep</span>
             </div>
-            <input id="search-input" type="text" placeholder=">" autofocus />
+            <div class="search-input-row">
+                <span class="search-prompt">&gt;</span>
+                <input id="search-input" type="text" autofocus />
+                <span id="result-count">0/0</span>
+            </div>
         </div>
 
         <!-- MAIN 2-PANE LAYOUT -->
@@ -95,7 +99,9 @@ function getHtmlTemplateForLiveGrep(scriptUri: vscode.Uri) {
                 <div class="pane-header">
                     <span>results</span>
                 </div>
-                <div class="placeholder">No results yet</div>
+                <div id="results-list">
+                    <div class="placeholder">No results yet</div>
+                </div>
             </div>
 
             <!-- GREP PREVIEW -->
@@ -128,4 +134,3 @@ function getHtmlTemplateForCurrentBufferFuzzyFind(scriptUri: vscode.Uri) {
     return `
         `;
 }
-
