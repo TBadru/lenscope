@@ -10,6 +10,7 @@ export function getWebviewContent(
         vscode.Uri.file(path.join(context.extensionPath, 'media', 'webview.js'))
     );
 
+    
     const styleUri = webview.asWebviewUri(
         vscode.Uri.file(path.join(context.extensionPath, 'media', 'webview.css'))
     );
