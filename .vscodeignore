@@ -3,12 +3,31 @@
 out/**
 node_modules/**
 src/**
-.gitignore
-.yarnrc
+coverage/**
+.git/**
+.github/**
+
+# Build tooling
 esbuild.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
+tsconfig.json
+eslint.config.mjs
+
+# Tests
+**/*.test.*
+**/*.spec.*
+
+# Source maps and TypeScript
 **/*.map
 **/*.ts
-**/.vscode-test.*
+
+# Documentation only needed in repo
+vsc-extension-quickstart.md
+
+# Package manager files
+.yarnrc
+.yarn/**
+.pnpm-store/**
+
+# OS files
+.DS_Store
+Thumbs.db
