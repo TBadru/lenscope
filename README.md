@@ -135,4 +135,4 @@ Lenscope built-in features/functions soo far;
 
 ## License
 
-[The Unlicense](https://github.com/TBadru/lenscope/blob/main/LICENSE)
+[MIT](https://github.com/TBadru/lenscope/blob/main/LICENSE)
