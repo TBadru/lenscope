@@ -25,7 +25,7 @@ const FILE_ICONS = {
   tsx: "react-original.svg",
   vue: "vuejs-original.svg",
   svelte: "svelte-original.svg",
-  astro: "astro-original.svg",
+  astro: "html5-original.svg",
 
   //HTML / CSS
   html: "html5-original.svg",
@@ -34,39 +34,39 @@ const FILE_ICONS = {
   css: "css3-original.svg",
   scss: "sass-original.svg",
   sass: "sass-original.svg",
-  less: "less-plain-wordmark.svg",
-  styl: "stylus-original.svg",
-  stylus: "stylus-original.svg",
-  postcss: "postcss-original.svg",
+  less: "css3-original.svg",
+  styl: "css3-original.svg",
+  stylus: "css3-original.svg",
+  postcss: "css3-original.svg",
 
   //JSON / Config
-  json: "json.svg",
-  jsonc: "json.svg",
-  json5: "json.svg",
+  json: "json-original.svg",
+  jsonc: "json-original.svg",
+  json5: "json-original.svg",
   yaml: "yaml-original.svg",
   yml: "yaml-original.svg",
-  toml: "toml-original.svg",
-  ini: "settings.svg",
-  cfg: "settings.svg",
-  conf: "settings.svg",
-  properties: "settings.svg",
-  env: "settings.svg",
-  xml: "xml-original.svg",
-  plist: "xml-original.svg",
+  toml: "yaml-original.svg",
+  ini: "yaml-original.svg",
+  cfg: "yaml-original.svg",
+  conf: "yaml-original.svg",
+  properties: "yaml-original.svg",
+  env: "yaml-original.svg",
+  xml: "html5-original.svg",
+  plist: "html5-original.svg",
 
   //Markdown / Docs
   md: "markdown-original.svg",
   mdx: "markdown-original.svg",
   markdown: "markdown-original.svg",
   rst: "markdown-original.svg",
-  adoc: "asciidoc-original.svg",
-  txt: "text.svg",
+  adoc: "markdown-original.svg",
+  txt: "markdown-original.svg",
 
   //Python
   py: "python-original.svg",
   pyw: "python-original.svg",
   pyi: "python-original.svg",
-  ipynb: "jupyter-original.svg",
+  ipynb: "python-original.svg",
 
   //Go
   go: "go-original.svg",
@@ -84,16 +84,16 @@ const FILE_ICONS = {
   kt: "kotlin-original.svg",
   kts: "kotlin-original.svg",
   scala: "scala-original.svg",
-  groovy: "groovy-original.svg",
-  gradle: "gradle-original.svg",
+  groovy: "java-original.svg",
+  gradle: "java-original.svg",
 
   //PHP
   php: "php-original.svg",
   phtml: "php-original.svg",
 
   //C / C++
-  c: "c-original.svg",
-  h: "c-original.svg",
+  c: "cplusplus-original.svg",
+  h: "cplusplus-original.svg",
   cpp: "cplusplus-original.svg",
   cxx: "cplusplus-original.svg",
   cc: "cplusplus-original.svg",
@@ -102,14 +102,14 @@ const FILE_ICONS = {
   hh: "cplusplus-original.svg",
 
   //C#
-  cs: "csharp-original.svg",
-  csproj: "dotnetcore-original.svg",
-  sln: "dotnetcore-original.svg",
+  cs: "cplusplus-original.svg",
+  csproj: "cplusplus-original.svg",
+  sln: "cplusplus-original.svg",
   razor: "blazor-original.svg",
 
   //F#
-  fs: "fsharp-original.svg",
-  fsx: "fsharp-original.svg",
+  fs: "dotnetcore-original.svg",
+  fsx: "dotnetcore-original.svg",
 
   //Swift
   swift: "swift-original.svg",
@@ -134,7 +134,7 @@ const FILE_ICONS = {
 
   //Clojure
   clj: "clojure-original.svg",
-  cljs: "clojure-original.svg",
+  cljs: "clojurescript-original.svg",
   cljc: "clojure-original.svg",
 
   //Lua
@@ -150,22 +150,13 @@ const FILE_ICONS = {
   //Julia
   jl: "julia-original.svg",
 
-  //Nim
-  nim: "nim-original.svg",
-
   //Zig
   zig: "zig-original.svg",
 
-  //Crystal
-  cr: "crystal-original.svg",
-
-  //Solidityx
-  sol: "solidity-original.svg",
-
   //SQL
-  sql: "sql.svg",
-  prisma: "prisma-original.svg",
-  "prisma.schema": "prisma-original.svg",
+  sql: "mysql-original.svg",
+  prisma: "postgresql-original.svg",
+  "prisma.schema": "postgresql-original.svg",
 
   //Shell
   sh: "bash-original.svg",
@@ -198,8 +189,8 @@ const FILE_ICONS = {
   nix: "nixos-original.svg",
 
   //Build Systems
-  Makefile: "cmake-original.svg",
-  makefile: "cmake-original.svg",
+  Makefile: "bash-original.svg",
+  makefile: "bash-original.svg",
   cmake: "cmake-original.svg",
   bazel: "bazel-original.svg",
   bzl: "bazel-original.svg",
@@ -210,7 +201,7 @@ const FILE_ICONS = {
   gitmodules: "git-original.svg",
 
   //Default
-  default: "default.svg",
+  default: "markdown-original.svg",
 };
 
 // function getFileIconPath(file) {
@@ -1187,7 +1178,7 @@ function renderResultItem(item, index, regex) {
   }
 
   el.innerHTML = `
-      <img class="file-icon" src="${iconPath}" />
+      <img class="file-icon" src="${iconPath}" onerror="this.src='${ICON_BASE}/${FILE_ICONS.default}'" />
       <div class="result-content">
         <div class="result-file">${escapeHtml(fileLabel)}</div>
         <div class="result-text">${matchText}</div>
