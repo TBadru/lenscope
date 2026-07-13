@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { exec, spawn, type ChildProcessWithoutNullStreams } from 'child_process';
 import * as fs from 'fs';
+import * as readline from 'readline';
 import * as util from 'util';
 import { getWebviewContent } from './webview';
 import * as os from "os";
@@ -8,9 +9,12 @@ import * as path from "path";
 
 
 const execPromise = util.promisify(exec);
+const RESULT_BATCH_SIZE = 100;
+const RESULT_FLUSH_MS = 40;
 
 interface GrepResult {
     file: string;
+    relative: string;
     line: number;
     text: string;
 }
@@ -95,54 +99,73 @@ export function activate(context: vscode.ExtensionContext) {
         panel.webview.html = getWebviewContent(context, panel.webview);
         panel.onDidDispose(() => { panel = null; });
 
-        let FuseModule: any;
         let searchTimeout: NodeJS.Timeout | null = null;
-        const DEBOUNCE_MS = 250;
+        const DEBOUNCE_MS = 50;
+        let searchVersion = 0;
+        let activeSearchProcess: ChildProcessWithoutNullStreams | null = null;
+
+        const cancelActiveSearch = () => {
+            if (activeSearchProcess && !activeSearchProcess.killed) {
+                activeSearchProcess.kill();
+            }
+            activeSearchProcess = null;
+        };
+
+        panel.onDidDispose(() => {
+            if (searchTimeout) {clearTimeout(searchTimeout);}
+            cancelActiveSearch();
+        });
 
         panel.webview.onDidReceiveMessage(async (msg: any) => {
+
+            if (msg.type === "cancelSearch") {
+                if (searchTimeout) {clearTimeout(searchTimeout);}
+                searchVersion++;
+                cancelActiveSearch();
+            }
 
             // search
 
             if (msg.type === "search") {
 
                 if (searchTimeout) {clearTimeout(searchTimeout);}
+                cancelActiveSearch();
+                const currentSearch = ++searchVersion;
 
                 searchTimeout = setTimeout(async () => {
                     const query: string = msg.query || "";
-                    const rawResults = await ripgrepSearch(query);
+                    if (!query.trim()) {return;}
 
-                    // if (!FuseModule) FuseModule = (await import("fuse.js")).default;
-                    if (!FuseModule) {
-                        FuseModule = (await import("fuse.js")).default;
+                    const workspacePath = getWorkspacePath();
+                    const rgPath = await getRgPath();
+
+                    if (currentSearch !== searchVersion || !workspacePath || !rgPath) {
+                        return;
                     }
 
-                    const fuse = new FuseModule(rawResults, {
-                        keys: ["file", "text"],
-                        includeScore: true,
-                        threshold: 0.5,
-                        isCaseSensitive: false
-                    });
+                    panel?.webview.postMessage({ type: "searchStart", searchId: currentSearch });
 
-                    const results: GrepResult[] = 
-                    query? fuse .search(query).map((r: any) => r.item): rawResults;
-
-                    panel?.webview.postMessage({
-                      type: "results",
-                      results,
-                    });
-
-                    if (results.length > 0) {
-                      const preview = await readFilePreview(
-                        results[0].file,
-                        results[0].line
-                      );
-                      panel?.webview.postMessage({ type: "preview", preview });
-                    } else {
-                      panel?.webview.postMessage({
-                        type: "preview",
-                        preview: "(preview empty)",
-                      });
-                    }
+                    activeSearchProcess = startRipgrepSearch(
+                        query,
+                        workspacePath,
+                        rgPath,
+                        (results) => {
+                            if (currentSearch !== searchVersion) {return;}
+                            panel?.webview.postMessage({
+                                type: "appendResults",
+                                searchId: currentSearch,
+                                results,
+                            });
+                        },
+                        () => {
+                            if (currentSearch !== searchVersion) {return;}
+                            activeSearchProcess = null;
+                            panel?.webview.postMessage({
+                                type: "searchDone",
+                                searchId: currentSearch,
+                            });
+                        }
+                    );
 
                 }, DEBOUNCE_MS);
             }
@@ -151,7 +174,11 @@ export function activate(context: vscode.ExtensionContext) {
             if (msg.type === "preview") {
 
                 const preview = await readFilePreview(msg.file, msg.line);
-                panel?.webview.postMessage({ type: "preview", preview });
+                panel?.webview.postMessage({
+                    type: "preview",
+                    preview,
+                    previewId: msg.previewId,
+                });
             }
 
             //open file
@@ -180,73 +207,152 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() { }
 
 
-// ripgrep search
-async function ripgrepSearch(query: string): Promise<GrepResult[]> {
-    if (!query.trim()) {return [];}
-
+function getWorkspacePath(): string | null {
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) {return [];}
-    const workspacePath = workspaceFolders[0].uri.fsPath;
+    if (!workspaceFolders) {return null;}
+    return workspaceFolders[0].uri.fsPath;
+}
 
-    const rgPath = await getRgPath();
-    if (!rgPath) {return [];}
+function startRipgrepSearch(
+    query: string,
+    workspacePath: string,
+    rgPath: string,
+    onResults: (results: GrepResult[]) => void,
+    onDone: () => void
+): ChildProcessWithoutNullStreams {
+    const child = spawn(rgPath, [
+        "-i",
+        "--line-number",
+        "--with-filename",
+        "--no-heading",
+        "--fixed-strings",
+        "--color",
+        "never",
+        "--no-messages",
+        "--",
+        query,
+        "."
+    ], { cwd: workspacePath });
 
-    const safeQuery = query.replace(/"/g, '\\"');
-    const cmd = `"${rgPath}" -i --vimgrep --fixed-strings "${safeQuery}" .`;
+    let buffered = "";
+    let pending: GrepResult[] = [];
+    let flushTimer: NodeJS.Timeout | null = null;
+    let done = false;
+    const seen = new Set<string>();
 
-    try {
-        const { stdout } = await execPromise(cmd, {
-            cwd: workspacePath,
-            maxBuffer: 1024 * 1024 * 10
-        });
+    const flush = () => {
+        if (flushTimer) {
+            clearTimeout(flushTimer);
+            flushTimer = null;
+        }
 
-        return stdout
-            .split("\n")
-            .filter(Boolean)
-            .map(line => {
-                const match = line.match(/^(.+?):(\d+):(\d+):(.*)$/);
-                if (!match) {return null;}
+        if (!pending.length) {return;}
 
-                let [, file, lineNum, , text] = match;
+        const results = pending;
+        pending = [];
+        onResults(results);
+    };
 
-                if (!path.isAbsolute(file)) {
-                    file = path.join(workspacePath, file.replace(/^\.\//, ""));
-                }
+    const scheduleFlush = () => {
+        if (pending.length >= RESULT_BATCH_SIZE) {
+            flush();
+            return;
+        }
 
-                return {
-                    file,
-                    relative: path.relative(workspacePath, file),
-                    line: Number(lineNum),
-                    text
-                } as GrepResult;
-            })
-            .filter((v): v is GrepResult => Boolean(v))
-            .slice(0, 50);
+        if (!flushTimer) {
+            flushTimer = setTimeout(flush, RESULT_FLUSH_MS);
+        }
+    };
 
-    } catch {
-        return [];
+    const parseLines = (lines: string[]) => {
+        for (const line of lines) {
+            const result = parseGrepLine(line, workspacePath);
+            if (!result) {continue;}
+
+            const resultKey = `${result.relative}\0${result.line}\0${result.text}`;
+            if (seen.has(resultKey)) {continue;}
+
+            seen.add(resultKey);
+            pending.push(result);
+            scheduleFlush();
+        }
+    };
+
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+        buffered += chunk;
+        const lines = buffered.split("\n");
+        buffered = lines.pop() || "";
+        parseLines(lines);
+    });
+    child.stderr.on("data", () => undefined);
+
+    const finish = () => {
+        if (done) {return;}
+        done = true;
+        if (buffered) {
+            parseLines([buffered]);
+            buffered = "";
+        }
+        flush();
+        onDone();
+    };
+
+    child.on("close", finish);
+    child.on("error", finish);
+
+    return child;
+}
+
+function parseGrepLine(line: string, workspacePath: string): GrepResult | null {
+    const match = line.match(/^(.+?):(\d+)(?::\d+)?:(.*)$/);
+    if (!match) {return null;}
+
+    let [, file, lineNum, text] = match;
+
+    if (!path.isAbsolute(file)) {
+        file = path.join(workspacePath, file.replace(/^\.\//, ""));
     }
+
+    return {
+        file,
+        relative: path.relative(workspacePath, file),
+        line: Number(lineNum),
+        text
+    };
 }
 
 
 // file preview
 async function readFilePreview(file: string, lineNum: number): Promise<string> {
     try {
-        const text = fs.readFileSync(file, "utf8");
-        const lines = text.split("\n");
+        const start = Math.max(1, lineNum - 10);
+        const end = lineNum + 10;
+        const stream = fs.createReadStream(file, { encoding: "utf8" });
+        const reader = readline.createInterface({
+            input: stream,
+            crlfDelay: Infinity
+        });
 
-        const start = Math.max(0, lineNum - 10);
-        const end = Math.min(lines.length, lineNum + 10);
+        let current = 0;
+        const preview: string[] = [];
 
-        return lines
-            .slice(start, end)
-            .map((line, i) => {
-                const current = start + i + 1;
-                return current === lineNum
+        for await (const line of reader) {
+            current++;
+            if (current < start) {continue;}
+            if (current > end) {break;}
+
+            preview.push(
+                current === lineNum
                     ? `> ${current}: ${line}`
-                    : `  ${current}: ${line}`;
-            })
-            .join("\n");
+                    : `  ${current}: ${line}`
+            );
+        }
+
+        reader.close();
+        stream.destroy();
+
+        return preview.join("\n");
 
     } catch {
         return "Unable to load preview.";

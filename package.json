@@ -1,13 +1,43 @@
 {
-  "name": "Lenscope",
+  "name": "lenscope",
   "displayName": "lenscope",
-  "description": "a fuzzy finder over lists (ripgrep) VS code extension",
-  "version": "0.0.1",
+  "publisher": "tbadru",
+  "description": "A fast fuzzy finder for VS Code powered by ripgrep. Search files, live grep results, and your current buffer.",
+  "version": "0.0.2",
+  "license": "MIT",
+  "preview": true,
   "engines": {
     "vscode": "^1.120.0"
   },
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/tbadru/lenscope"
+  },
+  "homepage": "https://github.com/tbadru/lenscope#readme",
+  "bugs": {
+    "url": "https://github.com/tbadru/lenscope/issues"
+  },
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "categories": [
+    "Productivity",
     "Other"
+  ],
+  "keywords": [
+    "fuzzy finder",
+    "ripgrep",
+    "grep",
+    "search",
+    "files",
+    "vscode",
+    "neovim",
+    "telescope",
+    "fzf"
+  ],
+  "extensionKind": [
+    "ui"
   ],
   "activationEvents": [
     "onCommand:lenscope.live_grep",
@@ -19,15 +49,18 @@
     "commands": [
       {
         "command": "lenscope.live_grep",
-        "title": "Lenscope: live grep"
+        "title": "Live Grep",
+        "category": "Lenscope"
       },
       {
         "command": "lenscope.find_files",
-        "title": "Lenscope: find files"
+        "title": "Find Files",
+        "category": "Lenscope"
       },
       {
         "command": "lenscope.current_buffer_fuzzy_find",
-        "title": "Lenscope: current buffer fuzzy find"
+        "title": "Current Buffer Fuzzy Find",
+        "category": "Lenscope"
       }
     ],
     "keybindings": [
@@ -62,16 +95,17 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@types/node": "26.0.0",
+    "@types/node": "26.1.1",
     "@types/vscode": "1.120.0",
-    "@vitest/coverage-v8": "4.1.9",
+    "@vitest/coverage-v8": "4.1.10",
     "@vscode/test-electron": "3.0.0",
+    "@vscode/vsce": "3.9.2",
     "esbuild": "0.28.1",
-    "eslint": "10.5.0",
+    "eslint": "10.7.0",
     "npm-run-all": "4.1.5",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.61.1",
-    "vitest": "4.1.9"
+    "typescript-eslint": "8.63.0",
+    "vitest": "4.1.10"
   },
   "dependencies": {
     "fuse.js": "7.4.2"
