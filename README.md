@@ -1,16 +1,32 @@
 # Lenscope
-
-**WORK IN PROGRESS**
-
 Gaze deeply into unknown regions using the power of the moon 🔭.
+
+> [!WARNING]
+>
+> **Lenscope is currently a work in progress.**
+>
+> The project is still being developed and features, behaviour may chnage without notice.
+>
+> **Contributions are currently not being accepted.** If you'd like to
+> experiment with Lenscope or customise it for your own use, you're welcome to
+> **fork the repository, build the project, and package it as a `.vsix` file**
+> for personal use.
+>
+> Contribution support may be opened in the future once the project has
+> stabilised.
+
+
 ## 🖼️ Screenshots
 ![live_grep Preview](./media/resources/live_grep.png)
 
 
 ![live_grep Preview](./media/resources/live_grep2.png)
+
+
+![live_grep Preview](./media/resources/live_grep3.png)
 ## What Is Lenscope?
- 
-`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code powered by  [ripgrep](https://github.com/BurntSushi/ripgrep).
+
+`lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
 ## What Is ripgrep?
 
@@ -65,7 +81,7 @@ $ winget install BurntSushi.ripgrep.MSVC
 - npm
 - VS Code
 - ripgrep (rg)
-   
+
 ### Setup
 
 Clone the repository:
@@ -104,6 +120,22 @@ Open the project in VS Code and press:
 F5
 
 This launches an Extension Development Host with `Lenscope` loaded and accessible from the Command palette.
+
+
+### Packaging for Personal Use
+If you'd like to use a fork of Lenscope locally, you can package the extension as a .vsix file.
+
+Verify everything is working:
+```
+$ npm run package
+```
+This generates a .vsix package that can be installed locally in VS Code.
+
+To install the package, open the VS Code Command Palette and run:
+
+Extensions: Install from VSIX...
+
+Then select the generated .vsix file.
 
 ## Tooling
 
