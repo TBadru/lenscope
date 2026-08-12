@@ -5,7 +5,7 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 >
 > **Lenscope is currently a work in progress.**
 >
-> The project is still being developed and features, behaviour may chnage without notice.
+> The project is still being developed and features, behaviour may change without notice.
 >
 > **Contributions are currently not being accepted.** If you'd like to
 > experiment with Lenscope or customise it for your own use, you're welcome to
