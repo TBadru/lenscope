@@ -10,7 +10,7 @@ export function getWebviewContent(
         vscode.Uri.file(path.join(context.extensionPath, 'media', 'webview.js'))
     );
 
-    
+
     const styleUri = webview.asWebviewUri(
         vscode.Uri.file(path.join(context.extensionPath, 'media', 'webview.css'))
     );
@@ -30,7 +30,7 @@ export function getWebviewContent(
         <head>
             <meta charset="UTF-8" />
             <meta http-equiv="Content-Security-Policy"
-                content="default-src 'none'; img-src ${webview.cspSource} https:; 
+                content="default-src 'none'; img-src ${webview.cspSource} https:;
                 script-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline';">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <link href="${styleUri}" rel="stylesheet" />
@@ -83,7 +83,7 @@ function getHtmlTemplateForLiveGrep(scriptUri: vscode.Uri) {
         <!-- LIVE GREP -->
         <div id="search-bar">
             <div class="pane-header">
-                <span>live grep</span>
+                <span>Live Grep</span>
             </div>
             <div class="search-input-row">
                 <span class="search-prompt">&gt;</span>
@@ -98,7 +98,7 @@ function getHtmlTemplateForLiveGrep(scriptUri: vscode.Uri) {
             <!-- RESULTS -->
             <div id="results">
                 <div class="pane-header">
-                    <span>results</span>
+                    <span>Results</span>
                 </div>
                 <div id="results-list">
                     <div class="placeholder">No results yet</div>
@@ -108,7 +108,7 @@ function getHtmlTemplateForLiveGrep(scriptUri: vscode.Uri) {
             <!-- GREP PREVIEW -->
             <div id="preview">
                 <div class="pane-header">
-                    <span>grep preview</span>
+                    <span>Grep Preview</span>
                 </div>
                 <!--  <pre><code id="preview-code"></code></pre> -->
                 <pre id="preview-code" class="preview"></pre>
@@ -130,7 +130,7 @@ function getHtmlTemplateForFindFiles(scriptUri: vscode.Uri) {
         `;
 }
 
-// HTML template for the find files interface
+// HTML template for the current buffer interface
 function getHtmlTemplateForCurrentBufferFuzzyFind(scriptUri: vscode.Uri) {
     return `
         `;
