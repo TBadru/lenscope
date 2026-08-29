@@ -2,7 +2,7 @@
   "name": "lenscope",
   "displayName": "lenscope",
   "publisher": "tbadru",
-  "description": "A fast fuzzy finder for VS Code powered by ripgrep. Search files, live grep results, and your current buffer.",
+  "description": "A fast fuzzy finder for VS Code powered by ripgrep. Search files, search by grep, and fuzzily search in current buffer .",
   "version": "0.0.2",
   "license": "MIT",
   "preview": true,
@@ -59,24 +59,24 @@
       },
       {
         "command": "lenscope.current_buffer_fuzzy_find",
-        "title": "Current Buffer Fuzzy Find",
+        "title": "Fuzzily Search Current buffer",
         "category": "Lenscope"
       }
     ],
     "keybindings": [
       {
         "command": "lenscope.live_grep",
-        "key": "cmd+l",
+        "key": "cmd+shift+l",
         "when": "editorTextFocus"
       },
       {
         "command": "lenscope.find_files",
-        "key": "cmd+f",
+        "key": "cmd+shift+f",
         "when": "editorTextFocus"
       },
       {
         "command": "lenscope.current_buffer_fuzzy_find",
-        "key": "cmd+c",
+        "key": "cmd+shift+c",
         "when": "editorTextFocus"
       }
     ]
