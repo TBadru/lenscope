@@ -439,6 +439,35 @@ body::before {
   background: rgba(100, 150, 255, 0.15);
 }
 
+/* Buffer mode: results span full width, no right border */
+.buffer-mode #results {
+  grid-column: 1 / -1;
+  border-right: none;
+}
+
+/* Buffer search line items */
+.buffer-line-num {
+  min-width: 3ch;
+  text-align: right;
+  opacity: 0.45;
+  font-size: 12px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.buffer-line-sep {
+  opacity: 0.25;
+  flex-shrink: 0;
+}
+
+.buffer-line-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
 @media (max-width: 760px) {
     body {
         align-items: start;
