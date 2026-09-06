@@ -70,6 +70,53 @@ export function getWebviewContentForFindFiles(
     `;
 }
 
+export function getWebviewContentForCurrentBufferFuzzyFind(
+    context: vscode.ExtensionContext,
+    webview: vscode.Webview
+): string {
+    const { scriptUri, styleUri, iconBase } = getWebviewUris(context, webview);
+    return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <script>
+          const ICON_BASE = "${iconBase}";
+          const LENSCOPE_MODE = "current_buffer_fuzzy_find";
+        </script>
+        <head>
+            <meta charset="UTF-8" />
+            <meta http-equiv="Content-Security-Policy"
+                content="default-src 'none'; img-src ${webview.cspSource} https:;
+                script-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline';">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link href="${styleUri}" rel="stylesheet" />
+            <title>Lenscope</title>
+        </head>
+        <body>
+            <div id="lenscope-container" class="buffer-mode">
+                <div id="search-bar">
+                    <div class="pane-header">
+                        <span>Current Buffer Fuzzy</span>
+                    </div>
+                    <div class="search-input-row">
+                        <span class="search-prompt">&gt;</span>
+                        <input id="search-input" type="text" autofocus />
+                        <span id="result-count">0/0</span>
+                    </div>
+                </div>
+                <div id="main">
+                    <div id="results">
+                        <div id="results-list">
+                            <div class="placeholder">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script src="${scriptUri}"></script>
+        </body>
+        </html>
+    `;
+}
+
 export function getWebviewContent(
     context: vscode.ExtensionContext,
     webview: vscode.Webview
