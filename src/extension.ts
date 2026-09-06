@@ -3,7 +3,7 @@ import { exec, spawn, type ChildProcessWithoutNullStreams } from 'child_process'
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as util from 'util';
-import { getWebviewContent } from './webview';
+import { getWebviewContent, getWebviewContentForFindFiles } from './webview';
 import * as os from "os";
 import * as path from "path";
 
@@ -17,6 +17,11 @@ interface GrepResult {
     relative: string;
     line: number;
     text: string;
+}
+
+interface FileResult {
+    file: string;
+    relative: string;
 }
 
 // cached RG path
@@ -81,6 +86,78 @@ async function getRgPath(): Promise<string> {
 export function activate(context: vscode.ExtensionContext) {
 
     let panel: vscode.WebviewPanel | null = null;
+    let findFilesPanel: vscode.WebviewPanel | null = null;
+
+    const findFilesDisposable = vscode.commands.registerCommand('lenscope.find_files', async () => {
+
+        if (findFilesPanel) {
+            findFilesPanel.reveal(vscode.ViewColumn.Active);
+            return;
+        }
+
+        findFilesPanel = vscode.window.createWebviewPanel(
+            'lenscope-find-files',
+            'Lenscope: Find Files',
+            vscode.ViewColumn.Active,
+            { enableScripts: true, retainContextWhenHidden: true }
+        );
+
+        findFilesPanel.webview.html = getWebviewContentForFindFiles(context, findFilesPanel.webview);
+        findFilesPanel.onDidDispose(() => { findFilesPanel = null; });
+
+        let activeFileListProcess: ChildProcessWithoutNullStreams | null = null;
+
+        findFilesPanel.onDidDispose(() => {
+            if (activeFileListProcess && !activeFileListProcess.killed) {
+                activeFileListProcess.kill();
+            }
+            activeFileListProcess = null;
+        });
+
+        findFilesPanel.webview.onDidReceiveMessage(async (msg: any) => {
+
+            if (msg.type === "listFiles") {
+                const workspacePath = getWorkspacePath();
+                const rgPath = await getRgPath();
+                if (!workspacePath || !rgPath) { return; }
+
+                activeFileListProcess = startRipgrepFileList(
+                    workspacePath,
+                    rgPath,
+                    (files) => {
+                        findFilesPanel?.webview.postMessage({ type: "files", files });
+                    },
+                    () => {
+                        activeFileListProcess = null;
+                        findFilesPanel?.webview.postMessage({ type: "filesDone" });
+                    }
+                );
+            }
+
+            if (msg.type === "preview") {
+                const preview = await readFilePreview(msg.file, msg.line ?? 1);
+                findFilesPanel?.webview.postMessage({
+                    type: "preview",
+                    preview,
+                    previewId: msg.previewId,
+                });
+            }
+
+            if (msg.type === "openFile") {
+                try {
+                    const line = (msg.line ?? 1) - 1;
+                    const doc = await vscode.workspace.openTextDocument(msg.file);
+                    await vscode.window.showTextDocument(doc, {
+                        selection: new vscode.Range(line, 0, line, 0)
+                    });
+                } catch {
+                    vscode.window.showErrorMessage(`Failed to open file: ${msg.file}`);
+                }
+            }
+        });
+    });
+
+    context.subscriptions.push(findFilesDisposable);
 
     const disposable = vscode.commands.registerCommand('lenscope.live_grep', () => {
 
@@ -322,6 +399,78 @@ function parseGrepLine(line: string, workspacePath: string): GrepResult | null {
     };
 }
 
+
+function startRipgrepFileList(
+    workspacePath: string,
+    rgPath: string,
+    onFiles: (files: FileResult[]) => void,
+    onDone: () => void
+): ChildProcessWithoutNullStreams {
+    const child = spawn(rgPath, [
+        "--files",
+        "--color", "never",
+        "--no-messages",
+        "."
+    ], { cwd: workspacePath });
+
+    let buffered = "";
+    let pending: FileResult[] = [];
+    let flushTimer: NodeJS.Timeout | null = null;
+    let done = false;
+    const seen = new Set<string>();
+
+    const flush = () => {
+        if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+        if (!pending.length) { return; }
+        const files = pending;
+        pending = [];
+        onFiles(files);
+    };
+
+    const scheduleFlush = () => {
+        if (pending.length >= RESULT_BATCH_SIZE) { flush(); return; }
+        if (!flushTimer) { flushTimer = setTimeout(flush, RESULT_FLUSH_MS); }
+    };
+
+    const parseLines = (lines: string[]) => {
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) { continue; }
+            if (seen.has(trimmed)) { continue; }
+            seen.add(trimmed);
+            const absolute = path.isAbsolute(trimmed)
+                ? trimmed
+                : path.join(workspacePath, trimmed.replace(/^\.\//, ""));
+            pending.push({
+                file: absolute,
+                relative: path.relative(workspacePath, absolute),
+            });
+            scheduleFlush();
+        }
+    };
+
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+        buffered += chunk;
+        const lines = buffered.split("\n");
+        buffered = lines.pop() || "";
+        parseLines(lines);
+    });
+    child.stderr.on("data", () => undefined);
+
+    const finish = () => {
+        if (done) { return; }
+        done = true;
+        if (buffered) { parseLines([buffered]); buffered = ""; }
+        flush();
+        onDone();
+    };
+
+    child.on("close", finish);
+    child.on("error", finish);
+
+    return child;
+}
 
 // file preview
 async function readFilePreview(file: string, lineNum: number): Promise<string> {
