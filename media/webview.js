@@ -274,10 +274,15 @@ function getFileIconPath(file) {
 }
 
 let results = [];
+let allFiles = [];
 let selectedIndex = -1;
 let currentPreviewFile = "";
 let activeSearchId = 0;
 let activePreviewId = 0;
+
+// LENSCOPE_MODE is set as a global const by the HTML before this script loads.
+// Falls back to 'live_grep' when not defined (live_grep panel).
+const isFindFiles = typeof LENSCOPE_MODE !== "undefined" && LENSCOPE_MODE === "find_files";
 
 let debounceTimeout = null;
 const DEBOUNCE_MS = 200;
@@ -1002,6 +1007,16 @@ updateResultCount();
 searchBox.addEventListener("input", () => {
   const query = searchBox.value.trim();
 
+  if (isFindFiles) {
+    results = filterFiles(allFiles, query);
+    selectedIndex = results.length ? 0 : -1;
+    currentPreviewFile = results.length ? (results[0].relative || results[0].file || "") : "";
+    renderResults(results, query);
+    if (results.length) { requestPreview(); }
+    updateResultCount();
+    return;
+  }
+
   if (debounceTimeout) clearTimeout(debounceTimeout);
 
   activeSearchId++;
@@ -1140,7 +1155,48 @@ window.addEventListener("message", (event) => {
 
     renderPreview(msg.preview || "(preview empty)");
   }
+
+  if (msg.type === "files") {
+    const incoming = Array.isArray(msg.files) ? msg.files : [];
+    if (!incoming.length) return;
+
+    allFiles.push(...incoming);
+    const query = searchBox.value.trim();
+
+    if (!query) {
+      const wasEmpty = results.length === 0;
+      const startIndex = results.length;
+      results.push(...incoming);
+
+      if (wasEmpty) {
+        resultsList.innerHTML = "";
+        selectedIndex = 0;
+        currentPreviewFile = results[0].relative || results[0].file || "";
+      }
+
+      appendResults(incoming, startIndex, "");
+      updateSelectionUI();
+      if (wasEmpty) { requestPreview(); }
+      updateResultCount();
+    }
+  }
+
+  if (msg.type === "filesDone") {
+    if (!results.length) {
+      selectedIndex = -1;
+      currentPreviewFile = "";
+      resultsList.innerHTML = "<div class='no-results'>No files found</div>";
+      renderPreview("(preview empty)");
+      updateResultCount();
+    }
+  }
 });
+
+function filterFiles(files, query) {
+  if (!query) return files;
+  const lower = query.toLowerCase();
+  return files.filter((f) => f.relative.toLowerCase().includes(lower));
+}
 
 function renderResults(items, query) {
   resultsList.innerHTML = "";
@@ -1167,23 +1223,32 @@ function renderResultItem(item, index, regex) {
   el.dataset.index = String(index);
 
   const iconPath = getFileIconPath(item.relative);
-  const fileLabel = `${item.relative}:${item.line}`;
-  let matchText = escapeHtml(item.text);
 
-  if (regex) {
-    matchText = matchText.replace(
-      regex,
-      (m) => `<span class="match">${m}</span>`,
-    );
+  if (item.line === undefined) {
+    let fileLabel = escapeHtml(item.relative);
+    if (regex) {
+      fileLabel = fileLabel.replace(regex, (m) => `<span class="match">${m}</span>`);
+    }
+    el.innerHTML = `
+        <img class="file-icon" src="${iconPath}" onerror="this.src='${ICON_BASE}/${FILE_ICONS.default}'" />
+        <div class="result-content">
+          <div class="result-file">${fileLabel}</div>
+        </div>
+      `;
+  } else {
+    const fileLabel = `${item.relative}:${item.line}`;
+    let matchText = escapeHtml(item.text);
+    if (regex) {
+      matchText = matchText.replace(regex, (m) => `<span class="match">${m}</span>`);
+    }
+    el.innerHTML = `
+        <img class="file-icon" src="${iconPath}" onerror="this.src='${ICON_BASE}/${FILE_ICONS.default}'" />
+        <div class="result-content">
+          <div class="result-file">${escapeHtml(fileLabel)}</div>
+          <div class="result-text">${matchText}</div>
+        </div>
+      `;
   }
-
-  el.innerHTML = `
-      <img class="file-icon" src="${iconPath}" onerror="this.src='${ICON_BASE}/${FILE_ICONS.default}'" />
-      <div class="result-content">
-        <div class="result-file">${escapeHtml(fileLabel)}</div>
-        <div class="result-text">${matchText}</div>
-      </div>
-    `;
 
   if (index === selectedIndex) el.classList.add("selected");
   return el;
@@ -1248,7 +1313,7 @@ function requestPreview() {
     type: "preview",
     previewId,
     file: item.file,
-    line: item.line,
+    line: item.line ?? 1,
   });
 }
 
@@ -1261,6 +1326,10 @@ function openSelectedFile() {
   vscode.postMessage({
     type: "openFile",
     file: item.file,
-    line: item.line,
+    line: item.line ?? 1,
   });
+}
+
+if (isFindFiles) {
+  vscode.postMessage({ type: "listFiles" });
 }
