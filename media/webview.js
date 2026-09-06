@@ -275,6 +275,7 @@ function getFileIconPath(file) {
 
 let results = [];
 let allFiles = [];
+let allLines = [];
 let selectedIndex = -1;
 let currentPreviewFile = "";
 let activeSearchId = 0;
@@ -283,6 +284,7 @@ let activePreviewId = 0;
 // LENSCOPE_MODE is set as a global const by the HTML before this script loads.
 // Falls back to 'live_grep' when not defined (live_grep panel).
 const isFindFiles = typeof LENSCOPE_MODE !== "undefined" && LENSCOPE_MODE === "find_files";
+const isBufferSearch = typeof LENSCOPE_MODE !== "undefined" && LENSCOPE_MODE === "current_buffer_fuzzy_find";
 
 let debounceTimeout = null;
 const DEBOUNCE_MS = 200;
@@ -975,6 +977,7 @@ function highlightCode(code, file) {
 }
 
 function renderPreview(preview, file = currentPreviewFile) {
+  if (!previewText) { return; }
   const text = preview || "(preview empty)";
   const lines = text.split("\n");
 
@@ -1009,6 +1012,16 @@ searchBox.addEventListener("input", () => {
 
   if (isFindFiles) {
     results = filterFiles(allFiles, query);
+    selectedIndex = results.length ? 0 : -1;
+    currentPreviewFile = results.length ? (results[0].relative || results[0].file || "") : "";
+    renderResults(results, query);
+    if (results.length) { requestPreview(); }
+    updateResultCount();
+    return;
+  }
+
+  if (isBufferSearch) {
+    results = filterLines(allLines, query);
     selectedIndex = results.length ? 0 : -1;
     currentPreviewFile = results.length ? (results[0].relative || results[0].file || "") : "";
     renderResults(results, query);
@@ -1190,12 +1203,36 @@ window.addEventListener("message", (event) => {
       updateResultCount();
     }
   }
+
+  if (msg.type === "bufferLines") {
+    const incoming = Array.isArray(msg.lines) ? msg.lines : [];
+    allLines = incoming;
+    results = incoming;
+    selectedIndex = results.length ? 0 : -1;
+    currentPreviewFile = results.length ? (results[0].relative || results[0].file || "") : "";
+
+    if (results.length) {
+      resultsList.innerHTML = "";
+      appendResults(results, 0, "");
+      updateSelectionUI();
+      requestPreview();
+    } else {
+      resultsList.innerHTML = "<div class='no-results'>No lines found</div>";
+    }
+    updateResultCount();
+  }
 });
 
 function filterFiles(files, query) {
   if (!query) return files;
   const lower = query.toLowerCase();
   return files.filter((f) => f.relative.toLowerCase().includes(lower));
+}
+
+function filterLines(lines, query) {
+  if (!query) return lines;
+  const lower = query.toLowerCase();
+  return lines.filter((l) => l.text.toLowerCase().includes(lower));
 }
 
 function renderResults(items, query) {
@@ -1224,7 +1261,17 @@ function renderResultItem(item, index, regex) {
 
   const iconPath = getFileIconPath(item.relative);
 
-  if (item.line === undefined) {
+  if (isBufferSearch) {
+    let matchText = escapeHtml(item.text);
+    if (regex) {
+      matchText = matchText.replace(regex, (m) => `<span class="match">${m}</span>`);
+    }
+    el.innerHTML = `
+        <span class="buffer-line-num">${item.line}</span>
+        <span class="buffer-line-sep">│</span>
+        <span class="buffer-line-text">${matchText}</span>
+      `;
+  } else if (item.line === undefined) {
     let fileLabel = escapeHtml(item.relative);
     if (regex) {
       fileLabel = fileLabel.replace(regex, (m) => `<span class="match">${m}</span>`);
@@ -1298,6 +1345,8 @@ function scrollToSelected() {
 
 // preview
 function requestPreview() {
+  if (isBufferSearch) { return; }
+
   if (selectedIndex < 0 || selectedIndex >= results.length) {
     currentPreviewFile = "";
     activePreviewId++;
@@ -1332,4 +1381,8 @@ function openSelectedFile() {
 
 if (isFindFiles) {
   vscode.postMessage({ type: "listFiles" });
+}
+
+if (isBufferSearch) {
+  vscode.postMessage({ type: "listLines" });
 }
