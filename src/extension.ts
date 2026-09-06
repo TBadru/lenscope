@@ -3,7 +3,7 @@ import { exec, spawn, type ChildProcessWithoutNullStreams } from 'child_process'
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as util from 'util';
-import { getWebviewContent, getWebviewContentForFindFiles } from './webview';
+import { getWebviewContent, getWebviewContentForFindFiles, getWebviewContentForCurrentBufferFuzzyFind } from './webview';
 import * as os from "os";
 import * as path from "path";
 
@@ -87,6 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let panel: vscode.WebviewPanel | null = null;
     let findFilesPanel: vscode.WebviewPanel | null = null;
+    let bufferPanel: vscode.WebviewPanel | null = null;
 
     const findFilesDisposable = vscode.commands.registerCommand('lenscope.find_files', async () => {
 
@@ -158,6 +159,70 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(findFilesDisposable);
+
+    const bufferDisposable = vscode.commands.registerCommand('lenscope.current_buffer_fuzzy_find', async () => {
+
+        const activeEditor = vscode.window.activeTextEditor;
+        if (!activeEditor) {
+            vscode.window.showErrorMessage('No active editor to search');
+            return;
+        }
+
+        if (bufferPanel) {
+            bufferPanel.dispose();
+        }
+
+        const document = activeEditor.document;
+        const filePath = document.uri.fsPath;
+        const workspacePath = getWorkspacePath();
+        const relative = workspacePath ? path.relative(workspacePath, filePath) : path.basename(filePath);
+
+        bufferPanel = vscode.window.createWebviewPanel(
+            'lenscope-buffer',
+            `Lenscope: ${path.basename(filePath)}`,
+            vscode.ViewColumn.Beside,
+            { enableScripts: true, retainContextWhenHidden: true }
+        );
+
+        bufferPanel.webview.html = getWebviewContentForCurrentBufferFuzzyFind(context, bufferPanel.webview);
+        bufferPanel.onDidDispose(() => { bufferPanel = null; });
+
+        const lines: GrepResult[] = [];
+        for (let i = 0; i < document.lineCount; i++) {
+            const text = document.lineAt(i).text;
+            if (!text.trim()) { continue; }
+            lines.push({ file: filePath, relative, line: i + 1, text });
+        }
+
+        bufferPanel.webview.onDidReceiveMessage(async (msg: any) => {
+
+            if (msg.type === "listLines") {
+                bufferPanel?.webview.postMessage({ type: "bufferLines", lines });
+            }
+
+            if (msg.type === "preview") {
+                const preview = await readFilePreview(msg.file, msg.line);
+                bufferPanel?.webview.postMessage({
+                    type: "preview",
+                    preview,
+                    previewId: msg.previewId,
+                });
+            }
+
+            if (msg.type === "openFile") {
+                try {
+                    const doc = await vscode.workspace.openTextDocument(msg.file);
+                    await vscode.window.showTextDocument(doc, {
+                        selection: new vscode.Range(msg.line - 1, 0, msg.line - 1, 0)
+                    });
+                } catch {
+                    vscode.window.showErrorMessage(`Failed to open file: ${msg.file}`);
+                }
+            }
+        });
+    });
+
+    context.subscriptions.push(bufferDisposable);
 
     const disposable = vscode.commands.registerCommand('lenscope.live_grep', () => {
 
