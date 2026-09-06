@@ -129,6 +129,10 @@ Verify everything is working:
 ```
 $ npm run package
 ```
+```
+$ npx vsce package
+```
+
 This generates a .vsix package that can be installed locally in VS Code.
 
 To install the package, open the VS Code Command Palette and run:
