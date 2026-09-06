@@ -27,59 +27,58 @@ interface FileResult {
 // cached RG path
 let cachedRgPath: string | null = null;
 
+async function findRgWindows(): Promise<string> {
+    try {
+        const { stdout } = await execPromise("where rg");
+        const p = stdout.split(/\r?\n/)[0].trim();
+        if (p && fs.existsSync(p)) { return p; }
+    } catch { /* not in PATH */ }
 
+    const userProfile = process.env.USERPROFILE ?? "";
+    const candidates = [
+        path.join(userProfile, "scoop", "shims", "rg.exe"),
+        "C:\\ProgramData\\chocolatey\\bin\\rg.exe",
+        path.join(userProfile, ".cargo", "bin", "rg.exe"),
+    ];
+    for (const p of candidates) {
+        if (fs.existsSync(p)) { return p; }
+    }
 
+    return "";
+}
 
-async function getRgPath(): Promise<string> {
-    if (cachedRgPath !== null) {return cachedRgPath;}
-
-    const isWindows = os.platform() === "win32";
+async function findRgUnix(): Promise<string> {
+    const candidates = [
+        "/opt/homebrew/bin/rg",
+        "/usr/local/bin/rg",
+        "/usr/bin/rg",
+    ];
+    for (const p of candidates) {
+        if (fs.existsSync(p)) { return p; }
+    }
 
     try {
-        // 1. Windows
-        if (isWindows) {
-            const { stdout } = await execPromise("where rg");
-            const rgPath = stdout.split(/\r?\n/)[0].trim();
-            if (rgPath && fs.existsSync(rgPath)) {
-                cachedRgPath = rgPath;
-                return cachedRgPath;
-            }
-        }
+        const { stdout } = await execPromise("which rg");
+        const p = stdout.trim();
+        if (p && fs.existsSync(p)) { return p; }
+    } catch { /* not found */ }
 
-        // 2. macOS / Linux
-        const commonPaths = [
-            "/opt/homebrew/bin/rg",   // Apple Silicon Homebrew
-            "/usr/local/bin/rg",      // Intel Homebrew
-            "/usr/bin/rg"             // System install
-        ];
+    return "";
+}
 
-        for (const p of commonPaths) {
-            if (fs.existsSync(p)) {
-                cachedRgPath = p;
-                console.log("Found rg at:", p);
-                return p;
-            }
-        }
+async function getRgPath(): Promise<string> {
+    if (cachedRgPath !== null) { return cachedRgPath; }
 
-        // 3. Fallback to `which`
-        const { stdout } = await execPromise("which rg", {
-            shell: "/bin/zsh"
-        });
+    const rgPath = os.platform() === "win32"
+        ? await findRgWindows()
+        : await findRgUnix();
 
-        const rgPath = stdout.split(/\r?\n/)[0].trim();
-        if (!rgPath || !fs.existsSync(rgPath)) {throw new Error("rg not found");}
-
-        cachedRgPath = rgPath;
-        console.log("Found rg via which:", rgPath);
-        return rgPath;
-
-    } catch (err) {
-        vscode.window.showErrorMessage(
-            "ripgrep (rg) not found. Install ripgrep"
-        );
-        cachedRgPath = "";
-        return "";
+    if (!rgPath) {
+        vscode.window.showErrorMessage("ripgrep (rg) not found. Install ripgrep");
     }
+
+    cachedRgPath = rgPath;
+    return rgPath;
 }
 
 
@@ -452,9 +451,7 @@ function parseGrepLine(line: string, workspacePath: string): GrepResult | null {
 
     let [, file, lineNum, text] = match;
 
-    if (!path.isAbsolute(file)) {
-        file = path.join(workspacePath, file.replace(/^\.\//, ""));
-    }
+    file = path.resolve(workspacePath, file);
 
     return {
         file,
@@ -503,9 +500,7 @@ function startRipgrepFileList(
             if (!trimmed) { continue; }
             if (seen.has(trimmed)) { continue; }
             seen.add(trimmed);
-            const absolute = path.isAbsolute(trimmed)
-                ? trimmed
-                : path.join(workspacePath, trimmed.replace(/^\.\//, ""));
+            const absolute = path.resolve(workspacePath, trimmed);
             pending.push({
                 file: absolute,
                 relative: path.relative(workspacePath, absolute),
