@@ -69,12 +69,18 @@ async function findRgUnix(): Promise<string> {
 async function getRgPath(): Promise<string> {
     if (cachedRgPath !== null) { return cachedRgPath; }
 
+    const configured = vscode.workspace.getConfiguration('lenscope').get<string>('ripgrepPath', '').trim();
+    if (configured && fs.existsSync(configured)) {
+        cachedRgPath = configured;
+        return cachedRgPath;
+    }
+
     const rgPath = os.platform() === "win32"
         ? await findRgWindows()
         : await findRgUnix();
 
     if (!rgPath) {
-        vscode.window.showErrorMessage("ripgrep (rg) not found. Install ripgrep");
+        vscode.window.showErrorMessage("ripgrep (rg) not found. Install ripgrep or set lenscope.ripgrepPath in settings.");
     }
 
     cachedRgPath = rgPath;
