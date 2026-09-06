@@ -3,9 +3,8 @@
   "displayName": "lenscope",
   "publisher": "tbadru",
   "description": "A fast fuzzy finder for VS Code powered by ripgrep. Search files, search by grep, and fuzzily search in current buffer .",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
-  "preview": true,
   "engines": {
     "vscode": "^1.120.0"
   },
@@ -59,27 +58,40 @@
       },
       {
         "command": "lenscope.current_buffer_fuzzy_find",
-        "title": "Fuzzily Search Current buffer",
+        "title": "Current Buffer Fuzzy",
         "category": "Lenscope"
       }
     ],
     "keybindings": [
       {
         "command": "lenscope.live_grep",
-        "key": "cmd+shift+l",
-        "when": "editorTextFocus"
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "!terminalFocus"
       },
       {
         "command": "lenscope.find_files",
-        "key": "cmd+shift+f",
-        "when": "editorTextFocus"
+        "key": "ctrl+shift+alt+f",
+        "mac": "cmd+shift+alt+f",
+        "when": "!terminalFocus"
       },
       {
         "command": "lenscope.current_buffer_fuzzy_find",
-        "key": "cmd+shift+c",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
         "when": "editorTextFocus"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Lenscope",
+      "properties": {
+        "lenscope.ripgrepPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the ripgrep (rg) binary. Leave empty to let Lenscope discover it automatically."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
