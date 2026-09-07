@@ -6,6 +6,19 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-09-07
+
+### Added
+- Selected result now shows a `>` indicator that tracks as you navigate up and down
+
+### Changed
+- Search prompt `>` is now red
+- Preview pane context window expanded from ±10 lines to −40/+80 lines around the match
+- Empty result states ("No results yet", "No results found") are now vertically centred in the results pane
+- "preview empty" state is now vertically centred in the preview pane
+- Current Buffer Fuzzy Find: search bar and results now span the full width — no empty preview column
+- Windows: live grep now strips trailing `\r` from ripgrep output, fixing broken results on `\r\n` line endings
+
 ## [0.0.3] - 2026-09-06
 
 ### Added

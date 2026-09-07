@@ -3,7 +3,7 @@
   "displayName": "lenscope",
   "publisher": "tbadru",
   "description": "A fast fuzzy finder for VS Code powered by ripgrep. Search files, search by grep, and fuzzily search in current buffer .",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "engines": {
     "vscode": "^1.120.0"
