@@ -478,7 +478,12 @@ body::before {
   font-family: var(--vscode-editor-font-family, "JetBrains Mono", monospace);
 }
 
-/* Buffer mode: results span full width, no right border */
+/* Buffer mode: search bar and results span full width */
+.buffer-mode #search-bar {
+  grid-column: 1 / -1;
+  border-right: none;
+}
+
 .buffer-mode #results {
   grid-column: 1 / -1;
   border-right: none;
