@@ -452,7 +452,7 @@ function startRipgrepSearch(
 }
 
 function parseGrepLine(line: string, workspacePath: string): GrepResult | null {
-    const match = line.match(/^(.+?):(\d+)(?::\d+)?:(.*)$/);
+    const match = line.replace(/\r$/, "").match(/^(.+?):(\d+)(?::\d+)?:(.*)$/);
     if (!match) {return null;}
 
     let [, file, lineNum, text] = match;
