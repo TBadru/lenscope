@@ -18,6 +18,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - "preview empty" state is now vertically centred in the preview pane
 - Current Buffer Fuzzy Find: search bar and results now span the full width — no empty preview column
 - Windows: live grep now strips trailing `\r` from ripgrep output, fixing broken results on `\r\n` line endings
+- Updated dev dependencies: `@types/node`, `@vitest/coverage-v8`, `@vscode/test-electron`, `esbuild`, `eslint`, `typescript-eslint`, `vitest`
 
 ## [0.0.3] - 2026-09-06
 
