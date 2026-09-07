@@ -979,6 +979,12 @@ function highlightCode(code, file) {
 function renderPreview(preview, file = currentPreviewFile) {
   if (!previewText) { return; }
   const text = preview || "(preview empty)";
+
+  if (text === "(preview empty)") {
+    previewText.innerHTML = `<div class="preview-empty">preview empty</div>`;
+    return;
+  }
+
   const lines = text.split("\n");
 
   previewText.innerHTML = lines

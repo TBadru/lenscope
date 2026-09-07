@@ -50,7 +50,7 @@ export function getWebviewContentForFindFiles(
                 <div id="main">
                     <div id="results">
                         <div class="pane-header">
-                            <span>Files</span>
+                            <span>Results</span>
                         </div>
                         <div id="results-list">
                             <div class="placeholder">Loading files...</div>
@@ -58,7 +58,7 @@ export function getWebviewContentForFindFiles(
                     </div>
                     <div id="preview">
                         <div class="pane-header">
-                            <span>Preview</span>
+                            <span>Grep Preview</span>
                         </div>
                         <pre id="preview-code" class="preview"></pre>
                     </div>

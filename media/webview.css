@@ -70,6 +70,8 @@ body::before {
   padding: 10px 0;
   overflow: auto;
   white-space: pre;
+  display: flex;
+  flex-direction: column;
 
   background: var(--vscode-editor-background, #1e1e1e);
   color: var(--vscode-editor-foreground, #d4d4d4);
@@ -150,7 +152,6 @@ body::before {
 .result-item.selected {
     background: var(--select-bg);
     color: var(--text);
-    border-left: 2px solid var(--accent);
 }
 
 /* - Preview Pane - */
@@ -221,7 +222,7 @@ body::before {
 
 .search-prompt {
     flex: 0 0 auto;
-    color: var(--accent);
+    color: #f38ba8;
     font-weight: bold;
     user-select: none;
 }
@@ -284,6 +285,8 @@ body::before {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Single result entry */
@@ -305,7 +308,6 @@ body::before {
 .result-item.selected {
     background: var(--select-bg);
     color: var(--text);
-    border-left: 2px solid var(--accent);
 }
 
 /* Preview Pane */
@@ -437,6 +439,43 @@ body::before {
 
 .result-item.selected {
   background: rgba(100, 150, 255, 0.15);
+  padding-left: 4px;
+}
+
+.result-item.selected::before {
+  content: ">";
+  flex-shrink: 0;
+  color: #f38ba8;
+  font-weight: bold;
+  margin-right: 4px;
+  width: 10px;
+  text-align: center;
+}
+
+/* Centered placeholder / empty-state text in results list */
+.placeholder,
+.no-results {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  opacity: 0.55;
+  user-select: none;
+}
+
+/* Centered empty-state in the preview pane */
+.preview-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  opacity: 0.45;
+  user-select: none;
+  font-family: var(--vscode-editor-font-family, "JetBrains Mono", monospace);
 }
 
 /* Buffer mode: results span full width, no right border */
