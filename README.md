@@ -16,10 +16,9 @@ Gaze deeply into unknown regions using the power of the moon 🔭.
 ![live_grep Preview](./media/resources/live_grep.png)
 
 
-![live_grep Preview](./media/resources/live_grep2.png)
+![find_files Preview](./media/resources/find_files.png)
 
 
-![live_grep Preview](./media/resources/live_grep3.png)
 ## What Is Lenscope?
 
 `lenscope` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) inspired fuzzy finder for Visual Studio Code powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
@@ -139,22 +138,6 @@ Extensions: Install from VSIX...
 
 Then select the generated .vsix file.
 
-## Tooling
-
-Lenscope currently uses:
-
-- TypeScript
-
-- Vitest
-
-- ESLint
-
-- esbuild
-
-- npm
-
-The committed package-lock.json is the source of truth for dependency versions.
-
 ## Features/Functions
 
 Lenscope built-in features/functions soo far;
@@ -162,9 +145,10 @@ Lenscope built-in features/functions soo far;
 
 | Function | Keybinding (Mac / Win+Linux) | Description |
 | --- | --- | --- |
-| `live_grep` | `cmd+shift+l` / `ctrl+shift+l` | Search for a string across your workspace live as you type, respects `.gitignore` ✅ |
-| `find_files` | `cmd+shift+alt+f` / `ctrl+shift+alt+f` | Fuzzy search all files in your workspace, respects `.gitignore` ✅ |
+| `live_grep` | `cmd+shift+l` / `ctrl+shift+l` | Search for a string in your current working directory and get results live as you type, respects .gitignore. (Requires [ripgrep](https://github.com/BurntSushi/ripgrep)) ✅ |
+| `find_files` | `cmd+shift+alt+f` / `ctrl+shift+alt+f` | Lists files in your current working directory, respects `.gitignore` ✅ |
 | `current_buffer_fuzzy_find` | `cmd+shift+c` / `ctrl+shift+c` | Fuzzy search lines in the currently open file ✅ |
+| `git files` | | Fuzzy search through the output of git ls-files command, respects .gitignore ❌ |
 
 
 ## License
