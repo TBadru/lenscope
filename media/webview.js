@@ -1058,8 +1058,9 @@ searchBox.addEventListener("input", () => {
   }, DEBOUNCE_MS);
 });
 
-// keep search box focused
+// keep search box focused on load and when the tab regains focus
 searchBox.focus();
+window.addEventListener("focus", () => searchBox.focus());
 
 //Keyboard Navigation
 document.addEventListener("keydown", (e) => {
