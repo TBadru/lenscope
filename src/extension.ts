@@ -541,8 +541,8 @@ function startRipgrepFileList(
 // file preview
 async function readFilePreview(file: string, lineNum: number): Promise<string> {
     try {
-        const start = Math.max(1, lineNum - 40);
-        const end = lineNum + 80;
+        const start = Math.max(1, lineNum - 3);
+        const end = lineNum + 120;
         const stream = fs.createReadStream(file, { encoding: "utf8" });
         const reader = readline.createInterface({
             input: stream,
