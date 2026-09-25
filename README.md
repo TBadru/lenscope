@@ -145,9 +145,9 @@ Lenscope built-in features/functions soo far;
 
 | Function | Keybinding (Mac / Win+Linux) | Description |
 | --- | --- | --- |
-| `live_grep` | `cmd+shift+l` / `ctrl+shift+l` | Search for a string in your current working directory and get results live as you type, respects .gitignore. (Requires [ripgrep](https://github.com/BurntSushi/ripgrep)) ✅ |
-| `find_files` | `cmd+shift+alt+f` / `ctrl+shift+alt+f` | Lists files in your current working directory, respects `.gitignore` ✅ |
-| `current_buffer_fuzzy_find` | `cmd+shift+c` / `ctrl+shift+c` | Fuzzy search lines in the currently open file ✅ |
+| `live_grep` | <kbd>`cmd+shift+l`</kbd> / <kbd>`ctrl+shift+l`</kbd> | Search for a string in your current working directory and get results live as you type, respects .gitignore. (Requires [ripgrep](https://github.com/BurntSushi/ripgrep)) ✅ |
+| `find_files` | <kbd>`cmd+shift+alt+f`</kbd> / <kbd>`ctrl+shift+alt+f`</kbd> | Lists files in your current working directory, respects `.gitignore` ✅ |
+| `current_buffer_fuzzy_find` | <kbd>`cmd+shift+c`</kbd> / <kbd>`ctrl+shift+c`</kbd> | Fuzzy search lines in the currently open file ✅ |
 | `git files` | | Fuzzy search through the output of git ls-files command, respects .gitignore ❌ |
 
 
